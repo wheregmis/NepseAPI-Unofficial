@@ -531,6 +531,7 @@ class Nepse(_Nepse):
             }
         return self.company_symbol_id_keymap
 
+##raname the output format to ohlc ltp volume asof
     def getCompanyPriceVolumeHistory(self, symbol, start_date=None, end_date=None):
         end_date = end_date if end_date else date.today()
         start_date = start_date if start_date else (end_date - timedelta(days=365))
@@ -558,7 +559,7 @@ class Nepse(_Nepse):
 
     def getCompanyPriceVolumeHistory(self, symbol, start_date=None, end_date=None):
         end_date = end_date if end_date else date.today()
-        start_date = start_date if start_date else (end_date - timedelta(days=365))
+        start_date = start_date if start_date else (end_date - timedelta(days=730)) #365 days
         symbol = symbol.upper()
         company_id = self.getCompanyIDKeyMap()[symbol]
         url = f"{self.api_end_points['company_price_volume_history']}{company_id}?&size=500&startDate={start_date}&endDate={end_date}"

@@ -31,6 +31,11 @@ routes = {
     "DailyNepseIndexGraph": "/DailyNepseIndexGraph",
     "DailyScripPriceGraph": "/DailyScripPriceGraph",
     "CompanyList": "/CompanyList",
+    "SectorScrips": "/SectorScrips",
+    "CompanyDetails": "/CompanyDetails",
+    "Floorsheet": "/Floorsheet",
+    "FloorsheetOf": "/FloorsheetOf",
+    "PriceVolumeHistory": "/PriceVolumeHistory",
     "TradeTurnoverTransactionSubindices": "/TradeTurnoverTransactionSubindices",
 }
 
@@ -157,10 +162,45 @@ def getCompanyList():
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 
+@app.route(routes["SectorScrips"])
+def getSectorScrips():
+    response = flask.jsonify(nepse.getSectorScrips())
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
+@app.route(routes["CompanyDetails"])
+def getCompanyDetails():
+    args = request.args
+    param_scrip_name = args.get("symbol")
+    response = flask.jsonify(nepse.getCompanyDetails(param_scrip_name))
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
 
 @app.route(routes["PriceVolume"])
 def getPriceVolume():
     response = flask.jsonify(nepse.getPriceVolume())
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
+@app.route(routes["PriceVolumeHistory"])
+def getPriceVolumeHistory():
+    args = request.args
+    param_scrip_name = args.get("symbol")
+    response = flask.jsonify(nepse.getCompanyPriceVolumeHistory(param_scrip_name))
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
+@app.route(routes["Floorsheet"])
+def getFloorSheet():
+    response = flask.jsonify(nepse.getFloorSheet())
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
+@app.route(routes["FloorsheetOf"])
+def getFloorSheetOf():
+    args = request.args
+    param_scrip_name = args.get("symbol")
+    response = flask.jsonify(nepse.getFloorSheetOf(param_scrip_name))
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 

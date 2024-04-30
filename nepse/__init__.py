@@ -181,6 +181,7 @@ def start_server():
         "DailyNepseIndexGraph": "/DailyNepseIndexGraph",
         "DailyScripPriceGraph": "/DailyScripPriceGraph",
         "CompanyList": "/CompanyList",
+        "SectorScrips": "/SectorScrips",
         "TradeTurnoverTransactionSubindices": "/TradeTurnoverTransactionSubindices",
     }
 
@@ -214,6 +215,13 @@ def start_server():
         response = flask.jsonify(_getNepseIndex())
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
+
+    @app.route(routes["SectorScrips"])
+    def getSectorScrips():
+        response = flask.jsonify(nepse.getSectorScrips())
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
+
 
     def _getNepseIndex():
         response = dict()
