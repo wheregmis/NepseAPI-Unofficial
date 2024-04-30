@@ -1,6 +1,8 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, Response
+from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
 from nepse import Nepse
+import json
 
 app = FastAPI()
 
@@ -32,8 +34,9 @@ routes = {
 
 @app.get("/")
 def get_index():
-    content = "<BR>".join([f"<a href={value}> {key} </a>" for key, value in routes.items()])
-    return f"Serverving hot stock data <BR>{content}"
+    content = "<ul>" + "".join([f"<li><a href={value}>{key}</a></li>" for key, value in routes.items()]) + "</ul>"
+    html_content = f"<h1>Serving hot stock data</h1>{content}"
+    return Response(content=html_content, media_type="text/html")
 
 @app.get(routes["Summary"])
 def get_summary():
@@ -115,6 +118,7 @@ def get_daily_scrip_price_graph(symbol: str):
 
 @app.get(routes["CompanyList"])
 def get_company_list():
+    company_list = nepse.getCompanyList()
     return JSONResponse(content=nepse.getCompanyList(), headers={"Access-Control-Allow-Origin": "*"})
 
 
