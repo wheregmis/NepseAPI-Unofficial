@@ -35,7 +35,7 @@ routes = {
 @app.get("/")
 def get_index():
     content = "<ul>" + "".join([f"<li><a href={value}>{key}</a></li>" for key, value in routes.items()]) + "</ul>"
-    html_content = f"<h1>Serving hot stock data</h1>{content}"
+    html_content = f"<h1>Serving hot stock data using FastAPI</h1>{content}"
     return Response(content=html_content, media_type="text/html")
 
 @app.get(routes["Summary"])
