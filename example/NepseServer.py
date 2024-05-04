@@ -35,6 +35,7 @@ routes = {
     "CompanyDetails": "/CompanyDetails",
     "Floorsheet": "/Floorsheet",
     "FloorsheetOf": "/FloorsheetOf",
+    "SecurityList": "/SecurityList",
     "PriceVolumeHistory": "/PriceVolumeHistory",
     "TradeTurnoverTransactionSubindices": "/TradeTurnoverTransactionSubindices",
 }
@@ -159,6 +160,12 @@ def getDailyScripPriceGraph():
 @app.route(routes["CompanyList"])
 def getCompanyList():
     response = flask.jsonify(nepse.getCompanyList())
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
+@app.route(routes["CompanyList"])
+def getSecurityList():
+    response = flask.jsonify(nepse.getSecurityList())
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
 

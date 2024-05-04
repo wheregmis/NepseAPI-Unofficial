@@ -21,8 +21,14 @@ class _Nepse:
             date_function=datetime.now,
         )
 
+        # list of all company that were listed in nepse (including delisted but doesn't include promoter shares)
         self.company_symbol_id_keymap = None
+        # list of all valid company that are not delisted (includes promoter share)
+        self.security_symbol_id_keymap = None
+
         self.company_list = None
+        self.security_list = None
+
         self.sector_scrips = None
 
         self.floor_sheet_size = 500
@@ -112,6 +118,12 @@ class _Nepse:
         return self.requestGETAPI(url=self.api_end_points["nepse_subindices_url"])
 
     #####api requiring post method
+    def getPriceVolumeHistory(self, business_date=None):
+        url = f"{self.api_end_points['todays_price']}?&size=500&businessDate={business_date}"
+        return self.requestPOSTAPI(
+            url=url, payload_generator=self.getPOSTPayloadIDForFloorSheet
+        )
+
     def getDailyNepseIndexGraph(self):
         return self.requestPOSTAPI(
             url=self.api_end_points["nepse_index_daily_graph"],
@@ -306,21 +318,36 @@ class AsyncNepse(_Nepse):
         self.company_list = await self.requestGETAPI(
             url=self.api_end_points["company_list_url"]
         )
-        return self.company_list
+        # return a copy of self.company_list so than changes after return are not perisistent
+        return list(self.company_list)
+
+    async def getSecurityList(self):
+        self.security_list = await self.requestGETAPI(
+            url=self.api_end_points["security_list_url"]
+        )
+        # return a copy of self.company_list so than changes after return are not perisistent
+        return list(self.security_list)
 
     async def getSectorScrips(self):
         if self.sector_scrips is None:
-            company_info_list = await self.getCompanyList()
-
+            company_info_dict = {
+                company_info["symbol"]: company_info
+                for company_info in (await self.getCompanyList())
+            }
             sector_scrips = defaultdict(list)
-            for company_info in company_info_list:
-                sector_name = company_info["sectorName"]
-                scrip_name = company_info["symbol"]
 
-                sector_scrips[sector_name].append(scrip_name)
+            for security_info in await self.getSecurityList():
+                symbol = security_info["symbol"]
+                if company_info_dict.get(symbol):
+                    company_info = company_info_dict[symbol]
+                    sector_name = company_info["sectorName"]
+                    sector_scrips[sector_name].append(symbol)
+                else:
+                    sector_scrips["Promoter Share"].append(symbol)
+
             self.sector_scrips = dict(sector_scrips)
-
-        return self.sector_scrips
+        # return a copy of self.sector_scrips so than changes after return are not perisistent
+        return dict(self.sector_scrips)
 
     async def getCompanyIDKeyMap(self, force_update=False):
         if self.company_symbol_id_keymap is None or force_update:
@@ -330,20 +357,28 @@ class AsyncNepse(_Nepse):
             }
         return self.company_symbol_id_keymap
 
+    async def getSecurityIDKeyMap(self, force_update=False):
+        if self.security_symbol_id_keymap is None or force_update:
+            security_list = await self.getSecurityList()
+            self.security_symbol_id_keymap = {
+                security["symbol"]: security["id"] for security in security_list
+            }
+        return self.security_symbol_id_keymap
+
     async def getCompanyPriceVolumeHistory(
         self, symbol, start_date=None, end_date=None
     ):
         end_date = end_date if end_date else date.today()
         start_date = start_date if start_date else (end_date - timedelta(days=365))
         symbol = symbol.upper()
-        company_id = (await self.getCompanyIDKeyMap())[symbol]
+        company_id = (await self.getSecurityIDKeyMap())[symbol]
         url = f"{self.api_end_points['company_price_volume_history']}{company_id}?&size=500&startDate={start_date}&endDate={end_date}"
         return (await self.requestGETAPI(url=url))["content"]
 
     # api requiring post method
     async def getDailyScripPriceGraph(self, symbol):
         symbol = symbol.upper()
-        company_id = (await self.getCompanyIDKeyMap())[symbol]
+        company_id = (await self.getSecurityIDKeyMap())[symbol]
         return await self.requestPOSTAPI(
             url=f"{self.api_end_points['company_daily_graph']}{company_id}",
             payload_generator=self.getPOSTPayloadIDForScrips,
@@ -351,7 +386,7 @@ class AsyncNepse(_Nepse):
 
     async def getCompanyDetails(self, symbol):
         symbol = symbol.upper()
-        company_id = (await self.getCompanyIDKeyMap())[symbol]
+        company_id = (await self.getSecurityIDKeyMap())[symbol]
         return await self.requestPOSTAPI(
             url=f"{self.api_end_points['company_details']}{company_id}",
             payload_generator=self.getPOSTPayloadIDForScrips,
@@ -401,7 +436,7 @@ class AsyncNepse(_Nepse):
     async def getFloorSheetOf(self, symbol, business_date=None):
         # business date can be YYYY-mm-dd string or date object
         symbol = symbol.upper()
-        company_id = (await self.getCompanyIDKeyMap())[symbol]
+        company_id = (await self.getSecurityIDKeyMap())[symbol]
         business_date = (
             date.fromisoformat(f"{business_date}") if business_date else date.today()
         )
@@ -507,21 +542,36 @@ class Nepse(_Nepse):
         self.company_list = self.requestGETAPI(
             url=self.api_end_points["company_list_url"]
         )
-        return self.company_list
+        # return a copy of self.company_list so than changes after return are not perisistent
+        return list(self.company_list)
+
+    def getSecurityList(self):
+        self.security_list = self.requestGETAPI(
+            url=self.api_end_points["security_list_url"]
+        )
+        # return a copy of self.company_list so than changes after return are not perisistent
+        return list(self.security_list)
 
     def getSectorScrips(self):
         if self.sector_scrips is None:
-            company_info_list = self.getCompanyList()
-
+            company_info_dict = {
+                company_info["symbol"]: company_info
+                for company_info in self.getCompanyList()
+            }
             sector_scrips = defaultdict(list)
-            for company_info in company_info_list:
-                sector_name = company_info["sectorName"]
-                scrip_name = company_info["symbol"]
 
-                sector_scrips[sector_name].append(scrip_name)
+            for security_info in self.getSecurityList():
+                symbol = security_info["symbol"]
+                if company_info_dict.get(symbol):
+                    company_info = company_info_dict[symbol]
+                    sector_name = company_info["sectorName"]
+                    sector_scrips[sector_name].append(symbol)
+                else:
+                    sector_scrips["Promoter Share"].append(symbol)
+
             self.sector_scrips = dict(sector_scrips)
-
-        return self.sector_scrips
+        # return a copy of self.sector_scrips so than changes after return are not perisistent
+        return dict(self.sector_scrips)
 
     def getCompanyIDKeyMap(self, force_update=False):
         if self.company_symbol_id_keymap is None or force_update:
@@ -531,19 +581,26 @@ class Nepse(_Nepse):
             }
         return self.company_symbol_id_keymap
 
-##raname the output format to ohlc ltp volume asof
+    def getSecurityIDKeyMap(self, force_update=False):
+        if self.security_symbol_id_keymap is None or force_update:
+            security_list = self.getSecurityList()
+            self.security_symbol_id_keymap = {
+                security["symbol"]: security["id"] for security in security_list
+            }
+        return self.security_symbol_id_keymap
+
     def getCompanyPriceVolumeHistory(self, symbol, start_date=None, end_date=None):
         end_date = end_date if end_date else date.today()
         start_date = start_date if start_date else (end_date - timedelta(days=365))
         symbol = symbol.upper()
-        company_id = self.getCompanyIDKeyMap()[symbol]
+        company_id = self.getSecurityIDKeyMap()[symbol]
         url = f"{self.api_end_points['company_price_volume_history']}{company_id}?&size=500&startDate={start_date}&endDate={end_date}"
         return self.requestGETAPI(url=url)
 
     #####api requiring post method
     def getDailyScripPriceGraph(self, symbol):
         symbol = symbol.upper()
-        company_id = self.getCompanyIDKeyMap()[symbol]
+        company_id = self.getSecurityIDKeyMap()[symbol]
         return self.requestPOSTAPI(
             url=f"{self.api_end_points['company_daily_graph']}{company_id}",
             payload_generator=self.getPOSTPayloadIDForScrips,
@@ -551,19 +608,11 @@ class Nepse(_Nepse):
 
     def getCompanyDetails(self, symbol):
         symbol = symbol.upper()
-        company_id = self.getCompanyIDKeyMap()[symbol]
+        company_id = self.getSecurityIDKeyMap()[symbol]
         return self.requestPOSTAPI(
             url=f"{self.api_end_points['company_details']}{company_id}",
             payload_generator=self.getPOSTPayloadIDForScrips,
         )
-
-    def getCompanyPriceVolumeHistory(self, symbol, start_date=None, end_date=None):
-        end_date = end_date if end_date else date.today()
-        start_date = start_date if start_date else (end_date - timedelta(days=730)) #365 days
-        symbol = symbol.upper()
-        company_id = self.getCompanyIDKeyMap()[symbol]
-        url = f"{self.api_end_points['company_price_volume_history']}{company_id}?&size=500&startDate={start_date}&endDate={end_date}"
-        return self.requestGETAPI(url=url)["content"]
 
     def getFloorSheet(self, show_progress=False):
         url = f"{self.api_end_points['floor_sheet']}?&size={self.floor_sheet_size}&sort=contractId,desc"
@@ -585,7 +634,7 @@ class Nepse(_Nepse):
     def getFloorSheetOf(self, symbol, business_date=None):
         # business date can be YYYY-mm-dd string or date object
         symbol = symbol.upper()
-        company_id = self.getCompanyIDKeyMap()[symbol]
+        company_id = self.getSecurityIDKeyMap()[symbol]
         business_date = (
             date.fromisoformat(f"{business_date}") if business_date else date.today()
         )

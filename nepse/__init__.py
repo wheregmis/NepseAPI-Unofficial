@@ -14,8 +14,8 @@ __all__ = [
     "AsyncNepse",
 ]
 
-__version__ = "0.2.1.dev7"
-__release_date__ = timestamp(2024, 4, 27)
+__version__ = "0.2.1.dev10"
+__release_date__ = timestamp(2024, 4, 30)
 
 
 def main_cli():
@@ -181,7 +181,7 @@ def start_server():
         "DailyNepseIndexGraph": "/DailyNepseIndexGraph",
         "DailyScripPriceGraph": "/DailyScripPriceGraph",
         "CompanyList": "/CompanyList",
-        "SectorScrips": "/SectorScrips",
+        "SecurityList": "/SecurityList",
         "TradeTurnoverTransactionSubindices": "/TradeTurnoverTransactionSubindices",
     }
 
@@ -215,13 +215,6 @@ def start_server():
         response = flask.jsonify(_getNepseIndex())
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
-
-    @app.route(routes["SectorScrips"])
-    def getSectorScrips():
-        response = flask.jsonify(nepse.getSectorScrips())
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        return response
-
 
     def _getNepseIndex():
         response = dict()
@@ -301,6 +294,12 @@ def start_server():
     @app.route(routes["CompanyList"])
     def getCompanyList():
         response = flask.jsonify(nepse.getCompanyList())
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        return response
+
+    @app.route(routes["SecurityList"])
+    def getSecurityList():
+        response = flask.jsonify(nepse.getSecurityList())
         response.headers.add("Access-Control-Allow-Origin", "*")
         return response
 
