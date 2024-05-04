@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Response
 from fastapi.responses import HTMLResponse
 from fastapi.responses import JSONResponse
-from nepse import Nepse, AsyncNepse
+from nepse import Nepse #, AsyncNepse
 import json
 
 app = FastAPI()
@@ -9,7 +9,7 @@ app = FastAPI()
 #pip install --upgrade git+https://github.com/basic-bgnr/NepseUnofficialApi.git@dev
 
 nepse = Nepse()
-asyncnepse = AsyncNepse() #will swich later, currently not all methods are async and has ssl errors
+#asyncnepse = AsyncNepse() #will swich later, currently not all methods are async and has ssl errors
 nepse.setTLSVerification(False)
 
 routes = {
