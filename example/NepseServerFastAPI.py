@@ -132,6 +132,7 @@ async def get_sector_scrips():
 
 @app.get(routes["CompanyDetails"])
 async def get_company_details(symbol: str):
+    print(symbol)
     return JSONResponse(content=nepse.getCompanyDetails(symbol), headers={"Access-Control-Allow-Origin": "*"})
 
 
@@ -162,6 +163,7 @@ async def getSecurityList():
 @app.get(routes["TradeTurnoverTransactionSubindices"])
 async def getTradeTurnoverTransactionSubindices():
     companies = {company["symbol"]: company for company in nepse.getCompanyList()}
+
     turnover = {obj["symbol"]: obj for obj in nepse.getTopTenTurnoverScrips()}
     transaction = {obj["symbol"]: obj for obj in nepse.getTopTenTransactionScrips()}
     trade = {obj["symbol"]: obj for obj in nepse.getTopTenTradeScrips()}
@@ -189,49 +191,43 @@ async def getTradeTurnoverTransactionSubindices():
         "Tradings": "Trading Index",
     }
 
-    scrips_details = dict()
+    scrips_details = {}
     for symbol, company in companies.items():
-        company_details = {}
+        company_details = {
+            "symbol": symbol,
+            "sector": company["sectorName"],
+            "Turnover": turnover.get(symbol, {}).get("turnover", 0),
+            "transaction": transaction.get(symbol, {}).get("totalTrades", 0),
+            "volume": trade.get(symbol, {}).get("shareTraded", 0),
+            "previousClose": price_vol_info.get(symbol, {}).get("previousClose", 0),
+            "lastUpdatedDateTime": price_vol_info.get(symbol, {}).get("lastUpdatedDateTime", 0),
+            "name": company.get("securityName", ""),
+            "lastUpdatedDateTime": price_vol_info.get(symbol, {}).get("lastUpdatedDateTime", 0),
+            "category": company.get("instrumentType"),
+        }
 
-        company_details["symbol"] = symbol
-        company_details["sectorName"] = company["sectorName"]
-        company_details["totalTurnover"] = (
-            turnover[symbol]["turnover"] if symbol in turnover.keys() else 0
-        )
-        company_details["totalTrades"] = (
-            transaction[symbol]["totalTrades"] if symbol in transaction.keys() else 0
-        )
-        company_details["totalTradeQuantity"] = (
-            trade[symbol]["shareTraded"] if symbol in transaction.keys() else 0
-        )
-
-        if symbol in gainers.keys():
-            (
-                company_details["pointChange"],
-                company_details["percentageChange"],
-                company_details["ltp"],
-            ) = (
-                gainers[symbol]["pointChange"],
-                gainers[symbol]["percentageChange"],
-                gainers[symbol]["ltp"],
-            )
-        elif symbol in losers.keys():
-            (
-                company_details["pointChange"],
-                company_details["percentageChange"],
-                company_details["ltp"],
-            ) = (
-                losers[symbol]["pointChange"],
-                losers[symbol]["percentageChange"],
-                losers[symbol]["ltp"],
-            )
+        if symbol in gainers:
+            company_details.update({
+                "pointChange": gainers[symbol]["pointChange"],
+                "percentageChange": gainers[symbol]["percentageChange"],
+                "ltp": gainers[symbol]["ltp"],
+            })
+        elif symbol in losers:
+            company_details.update({
+                "pointChange": losers[symbol]["pointChange"],
+                "percentageChange": losers[symbol]["percentageChange"],
+                "ltp": losers[symbol]["ltp"],
+            })
         else:
-            (
-                company_details["pointChange"],
-                company_details["percentageChange"],
-                company_details["ltp"],
-            ) = (0, 0, 0)
+            company_details.update({
+                "pointChange": 0,
+                "percentageChange": 0,
+                "ltp": 0,
+            })
 
+        #let's filter here based on ltp and previos close, if ltp = 0 or previous close = 0, then the company is not trading
+        if company_details["ltp"] == 0 or company_details["previousClose"] == 0:
+            continue
         scrips_details[symbol] = company_details
 
     sector_details = dict()
@@ -239,16 +235,16 @@ async def getTradeTurnoverTransactionSubindices():
     for sector in sectors:
         total_trades, total_trade_quantity, total_turnover = 0, 0, 0
         for scrip_details in scrips_details.values():
-            if scrip_details["sectorName"] == sector:
-                total_trades += scrip_details["totalTrades"]
-                total_trade_quantity += scrip_details["totalTradeQuantity"]
-                total_turnover += scrip_details["totalTurnover"]
+            if scrip_details["sector"] == sector:
+                total_trades += scrip_details["transaction"]
+                total_trade_quantity += scrip_details["volume"]
+                total_turnover += scrip_details["Turnover"]
 
         sector_details[sector] = {
-            "totalTrades": total_trades,
-            "totalTradeQuantity": total_trade_quantity,
+            "transaction": total_trades,
+            "volume": total_trade_quantity,
             "totalTurnover": total_turnover,
-            "index": sector_sub_indices[sector_mapper[sector]],
+            "turnover": sector_sub_indices[sector_mapper[sector]],
             "sectorName": sector,
         }
 

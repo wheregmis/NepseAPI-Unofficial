@@ -379,9 +379,11 @@ class AsyncNepse(_Nepse):
     async def getDailyScripPriceGraph(self, symbol):
         symbol = symbol.upper()
         company_id = (await self.getSecurityIDKeyMap())[symbol]
+        payload = await self.getPOSTPayloadIDForScrips()
+        print(payload)
         return await self.requestPOSTAPI(
             url=f"{self.api_end_points['company_daily_graph']}{company_id}",
-            payload_generator=self.getPOSTPayloadIDForScrips,
+            payload_generator=payload,
         )
 
     async def getCompanyDetails(self, symbol):
@@ -468,6 +470,7 @@ class Nepse(_Nepse):
     def getPOSTPayloadIDForScrips(self):
         dummy_id = self.getDummyID()
         e = self.getDummyData()[dummy_id] + dummy_id + 2 * (date.today().day)
+        print(e)
         return e
 
     def getPOSTPayloadID(self):
@@ -607,8 +610,13 @@ class Nepse(_Nepse):
         )
 
     def getCompanyDetails(self, symbol):
+        print("company in ")
         symbol = symbol.upper()
+        print("company in ")
         company_id = self.getSecurityIDKeyMap()[symbol]
+        payload = await self.getPOSTPayloadIDForScrips()
+        print(payload)
+        print(company_id)
         return self.requestPOSTAPI(
             url=f"{self.api_end_points['company_details']}{company_id}",
             payload_generator=self.getPOSTPayloadIDForScrips,

@@ -2,6 +2,7 @@
     "price_volume_url": "/api/nots/securityDailyTradeStat/58",
     "summary_url": "/api/nots/market-summary/",
     "supply_demand_url": "/api/nots/nepse-data/supplydemand",
+
     "turnover_url": "/api/nots/top-ten/turnover",
     "top_gainers_url": "/api/nots/top-ten/top-gainer",
     "top_losers_url": "/api/nots/top-ten/top-loser",
@@ -33,6 +34,7 @@
     "company_daily_graph": "/api/nots/market/graphdata/daily/",
     "company_details": "/api/nots/security/",
     "company_price_volume_history": "/api/nots/market/history/security/",
+    
     "company_floorsheet": "/api/nots/security/floorsheet/",
     "floor_sheet": "/api/nots/nepse-data/floorsheet",
     "todays_price": "/api/nots/nepse-data/today-price"
