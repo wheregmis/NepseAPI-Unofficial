@@ -132,7 +132,6 @@ async def get_sector_scrips():
 
 @app.get(routes["CompanyDetails"])
 async def get_company_details(symbol: str):
-    print(symbol)
     return JSONResponse(content=nepse.getCompanyDetails(symbol), headers={"Access-Control-Allow-Origin": "*"})
 
 
