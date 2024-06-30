@@ -1,0 +1,18 @@
+[[source]]
+name = "NepseApi"
+url = ""
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+Flask = ">=2.3.2"
+pywasm = ">=1.0.8"
+httpx = {version = ">=0.27.0", extras = ["http2"]}
+tqdm = ">=4.66.2"
+fastapi = ">=0.110.3"
+uvicorn = ">=0.29.0"
+nepse = {git = "https://github.com/basic-bgnr/NepseUnofficialApi.git", ref = "master"}
+
+[requires]
+python_version = "3.12.3"  # Adjust this to match your project's Python version
