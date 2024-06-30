@@ -8,6 +8,8 @@ app = FastAPI()
 
 #pip install --upgrade git+https://github.com/basic-bgnr/NepseUnofficialApi.git@dev
 
+#onrender - pip3 install --upgrade git+https://github.com/surajrimal07/NepseAPI.git@dev
+
 nepse = Nepse()
 #asyncnepse = AsyncNepse() #will swich later, currently not all methods are async and has ssl errors
 nepse.setTLSVerification(False)
