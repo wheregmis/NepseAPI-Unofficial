@@ -34,6 +34,7 @@ routes = {
     "PriceVolumeHistory": "/PriceVolumeHistory",
     "SecurityList": "/SecurityList",
     "TradeTurnoverTransactionSubindices": "/TradeTurnoverTransactionSubindices",
+    "LiveMarket": "/LiveMarket",
 }
 
 @app.get("/")
@@ -63,6 +64,10 @@ async def _get_nepse_index():
     for obj in nepse.getNepseIndex():
         response[obj["index"]] = obj
     return response
+
+@app.get(routes["LiveMarket"])
+async def get_live_market():
+    return JSONResponse(content=nepse.getLiveMarket(), headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get(routes["NepseSubIndices"])
 async def get_nepse_subindices():
