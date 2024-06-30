@@ -4,3 +4,4 @@ httpx[http2]>=0.27.0
 tqdm>=4.66.2
 fastapi>=0.110.3
 uvicorn>=0.29.0
+nepse @ git+https://github.com/basic-bgnr/NepseUnofficialApi.git@master
