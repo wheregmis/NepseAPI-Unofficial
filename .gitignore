@@ -6,3 +6,4 @@ __*
 !.github/
 build/
 nepse.egg-info/
+.vercel

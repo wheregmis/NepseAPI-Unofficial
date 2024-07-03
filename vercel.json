@@ -1,5 +1,4 @@
 {
-  "devCommand": "uvicorn app:app --host 0.0.0.0 --port 8000",
   "builds": [
     {
       "src": "server.py",
@@ -11,8 +10,5 @@
       "src": "/(.*)",
       "dest": "server.py"
     }
-  ],
-  "env": {
-    "APP_MODULE": "app"
-  }
+  ]
 }
