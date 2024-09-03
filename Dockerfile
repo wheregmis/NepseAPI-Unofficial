@@ -19,7 +19,7 @@ COPY . .
 
 # Add a health check to ensure the application is running
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl -f http://localhost:8000 || exit 1
+  CMD /health_check.sh
 
 # Run the application
 CMD ["python", "server.py"]
