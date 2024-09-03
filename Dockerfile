@@ -1,6 +1,6 @@
-FROM python:3.12-slim
+FROM python:3.10-slim
 
-COPY requirements.txt .
+COPY ./requirements.txt .
 RUN pip install -r requirements.txt
 
 RUN pip install --upgrade git+https://github.com/basic-bgnr/NepseUnofficialApi.git
