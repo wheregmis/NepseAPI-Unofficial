@@ -2,7 +2,7 @@
 FROM python:3.10-slim-bullseye
 
 # Install git and other dependencies
-RUN apt-get install -y git curl
+RUN apt-get update && apt-get install -y git curl
 
 # Copy the requirements file
 COPY ./requirements.txt .
