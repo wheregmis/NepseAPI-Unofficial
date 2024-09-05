@@ -9,7 +9,7 @@ COPY ./requirements.txt .
 
 # Install the required Python packages
 RUN pip install --upgrade pip \
-    && pip install -r requirements.txt
+  && pip install -r requirements.txt
 
 # Install the NepseUnofficialApi directly from GitHub
 RUN pip install --upgrade git+https://github.com/basic-bgnr/NepseUnofficialApi.git
@@ -23,6 +23,9 @@ RUN chmod +x /health_check.sh
 # Add a health check to ensure the application is running
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD /health_check.sh
+
+# Expose the necessary port (if needed)
+EXPOSE 8000
 
 # Run the application
 CMD ["python", "server.py"]
