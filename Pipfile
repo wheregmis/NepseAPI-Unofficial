@@ -15,4 +15,4 @@ uvicorn = ">=0.32.1"
 nepse = {git = "https://github.com/basic-bgnr/NepseUnofficialApi.git", ref = "master"}
 
 [requires]
-python_version = "3.10"  # Adjust this to match your project's Python version
+python_version = "3.8"  # Adjust this to match your project's Python version
