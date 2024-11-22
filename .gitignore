@@ -7,3 +7,5 @@ __*
 build/
 nepse.egg-info/
 .vercel
+venv/
+.venv/
