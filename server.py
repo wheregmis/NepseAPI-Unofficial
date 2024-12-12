@@ -4,13 +4,10 @@ from nepse import AsyncNepse
 
 app = FastAPI()
 
-#pip install --upgrade git+https://github.com/basic-bgnr/NepseUnofficialApi.git@dev
+#pip install --upgrade git+https://github.com/basic-bgnr/NepseUnofficialApi.git
 
 #onrender - pip3 install --upgrade git+https://github.com/surajrimal07/NepseAPI.git@dev
-
-#nepse = Nepse()
-nepseAsync = AsyncNepse() #will swich later, currently not all methods are async and has ssl errors
-#nepse.setTLSVerification(False)
+nepseAsync = AsyncNepse()
 nepseAsync.setTLSVerification(False)
 
 routes = {
@@ -28,6 +25,7 @@ routes = {
     "DailyScripPriceGraph": "/DailyScripPriceGraph",
     "CompanyList": "/CompanyList",
     "SectorScrips": "/SectorScrips",
+    "MarketDepth": "/MarketDepth",
     "CompanyDetails": "/CompanyDetails",
     "Floorsheet": "/Floorsheet",
     "FloorsheetOf": "/FloorsheetOf",
@@ -86,6 +84,13 @@ async def _get_nepse_index():
 @app.get(routes["LiveMarket"])
 async def get_live_market():
     data = await nepseAsync.getLiveMarket()
+    return JSONResponse(content=data, headers={"Access-Control-Allow-Origin": "*"})
+
+
+#Bugged, hoping for fix from the library
+@app.get(routes["MarketDepth"])
+async def get_market_depth(symbol: str):
+    data = await nepseAsync.getSymbolMarketDepth(symbol)
     return JSONResponse(content=data, headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get(routes["NepseSubIndices"])
@@ -372,11 +377,27 @@ async def getTradeTurnoverTransactionSubindices():
     return JSONResponse({"scripsDetails": scrips_details, "sectorsDetails": sector_details}, headers={"Access-Control-Allow-Origin": "*"})
 
 async def _getNepseSubIndices():
-    response = dict()
-    for obj in await nepseAsync.getNepseSubIndices():
-        response[obj["index"]] = obj
-    return response
+    return {obj["index"]: obj for obj in await nepseAsync.getNepseSubIndices()}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    import platform
+
+    base_config = {
+        "app": "server:app",
+        "host": "0.0.0.0",
+        "port": 8000,
+        "timeout_keep_alive": 60,
+        "limit_concurrency": 1000,
+    }
+
+    if platform.system() == "Windows":
+        base_config["reload"] = True
+    else:
+        base_config.update({
+            "workers": 4,
+            "loop": "uvloop",
+            "http": "httptools"
+        })
+
+    uvicorn.run(**base_config)

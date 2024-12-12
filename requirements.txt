@@ -1,7 +1,7 @@
-Flask>=3.0.3
 pywasm>=1.0.8
 httpx[http2]>=0.27.2
 tqdm>=4.66.5
 fastapi>=0.115.5
+pyzmq>=26.2.0
 uvicorn>=0.32.1
 nepse @ git+https://github.com/basic-bgnr/NepseUnofficialApi.git  #@master
