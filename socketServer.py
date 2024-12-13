@@ -1,53 +1,15 @@
 import asyncio
-import zmq.asyncio
+import platform
+import websockets
 from nepse import AsyncNepse
 from asyncio import WindowsSelectorEventLoopPolicy
 import signal
+import json
 
+# Initialize Nepse Async
 nepseAsync = AsyncNepse()
 nepseAsync.setTLSVerification(False)
 asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
-
-routes = {
-    "PriceVolume": "/PriceVolume",
-    "Summary": "/Summary",
-    "SupplyDemand": "/SupplyDemand",
-    "TopGainers": "/TopGainers",
-    "TopLosers": "/TopLosers",
-    "TopTenTradeScrips": "/TopTenTradeScrips",
-    "TopTenTurnoverScrips": "/TopTenTurnoverScrips",
-    "TopTenTransactionScrips": "/TopTenTransactionScrips",
-    "IsNepseOpen": "/IsNepseOpen",
-    "NepseIndex": "/NepseIndex",
-    "NepseSubIndices": "/NepseSubIndices",
-    "DailyScripPriceGraph": "/DailyScripPriceGraph",
-    "CompanyList": "/CompanyList",
-    "SectorScrips": "/SectorScrips",
-    "CompanyDetails": "/CompanyDetails",
-    "Floorsheet": "/Floorsheet",
-    "FloorsheetOf": "/FloorsheetOf",
-    "PriceVolumeHistory": "/PriceVolumeHistory",
-    "SecurityList": "/SecurityList",
-    "TradeTurnoverTransactionSubindices": "/TradeTurnoverTransactionSubindices",
-    "LiveMarket": "/LiveMarket",
-    "DailyNepseIndexGraph": "/DailyNepseIndexGraph",
-    "DailySensitiveIndexGraph": "/DailySensitiveIndexGraph",
-    "DailyFloatIndexGraph": "/DailyFloatIndexGraph",
-    "DailySensitiveFloatIndexGraph": "/DailySensitiveFloatIndexGraph",
-    "DailyBankSubindexGraph": "/DailyBankSubindexGraph",
-    "DailyDevelopmentBankSubindexGraph": "/DailyDevelopmentBankSubindexGraph",
-    "DailyFinanceSubindexGraph": "/DailyFinanceSubindexGraph",
-    "DailyHotelTourismSubindexGraph": "/DailyHotelTourismSubindexGraph",
-    "DailyHydroPowerSubindexGraph": "/DailyHydroPowerSubindexGraph",
-    "DailyInvestmentSubindexGraph": "/DailyInvestmentSubindexGraph",
-    "DailyLifeInsuranceSubindexGraph": "/DailyLifeInsuranceSubindexGraph",
-    "DailyManufacturingProcessingSubindexGraph": "/DailyManufacturingProcessingSubindexGraph",
-    "DailyMicrofinanceSubindexGraph": "/DailyMicrofinanceSubindexGraph",
-    "DailyMutualFundSubindexGraph": "/DailyMutualFundSubindexGraph",
-    "DailyNonLifeInsuranceSubindexGraph": "/DailyNonLifeInsuranceSubindexGraph",
-    "DailyOthersSubindexGraph": "/DailyOthersSubindexGraph",
-    "DailyTradingSubindexGraph": "/DailyTradingSubindexGraph",
-}
 
 async def _get_summary():
     response = {obj["detail"]: obj["value"] for obj in await nepseAsync.getSummary()}
@@ -143,7 +105,7 @@ async def _get_trade_turnover_transaction_subindices():
 
     return {"scripsDetails": scrips_details, "sectorsDetails": sector_details}
 
-# ZMQ route handler
+# WebSocket handler
 async def handle_route(route: str, params: dict):
     route_handlers = {
         "Summary": lambda: _get_summary(),
@@ -191,45 +153,41 @@ async def handle_route(route: str, params: dict):
         return await handler()
     return {"error": "Route not found"}
 
-# ZMQ listener
-async def zmq_listener():
-    context = zmq.asyncio.Context()
-    socket = context.socket(zmq.REP)
-    socket.bind("tcp://0.0.0.0:5555")
-    print("ZMQ listener started on tcp://0.0.0.0:5555")
-
-    loop = asyncio.get_running_loop()
-    shutdown_event = asyncio.Event()
-
-    def cleanup():
-        print("\nCleaning up resources...")
-        socket.close(linger=0)
-        context.term()
-
-    def signal_handler(*args):
-        print("\nShutting down gracefully...")
-        shutdown_event.set()
-        loop.call_soon_threadsafe(loop.stop)
-
-    for sig in (signal.SIGINT, signal.SIGTERM):
-        loop.add_signal_handler(sig, signal_handler)
-
+# WebSocket listener
+async def ws_listener(websocket, path=None):
+    # Handle the WebSocket connection
+    print(f"New connection from {websocket.remote_address}")
     try:
-        while not shutdown_event.is_set():
+        async for message in websocket:
             try:
-                message = await asyncio.wait_for(socket.recv_json(), timeout=1.0)
-                route = message.get("route")
-                params = message.get("params", {})
+                # Parse the incoming message as JSON
+                request = json.loads(message)
+                route = request.get('route')
+                params = request.get('params', {})
+                print(f"Received request: {route} with params: {params}")
+
+                # Handle the route
                 response = await handle_route(route, params)
-                await socket.send_json(response)
-            except asyncio.TimeoutError:
-                continue
-            except Exception as e:
-                print(f"Error handling route {route}: {e}")
-                await socket.send_json({})
 
+                # Send the response back to the client
+                await websocket.send(json.dumps(response))
+            except json.JSONDecodeError:
+                # Handle invalid JSON
+                await websocket.send(json.dumps({"error": "Invalid JSON"}))
+            except Exception as route_error:
+                # Handle any errors in route processing
+                await websocket.send(json.dumps({"error": str(route_error)}))
+    except Exception as e:
+        print(f"WebSocket Error: {e}")
     finally:
-        cleanup()
+        await websocket.close()
 
+# Start WebSocket server on localhost:5555
+async def start_ws_server():
+    server = await websockets.serve(ws_listener, "localhost", 5555)
+    print("WebSocket server started on ws://localhost:5555")
+    await server.wait_closed()
+
+# Running the WebSocket server
 if __name__ == "__main__":
-    asyncio.run(zmq_listener())
+    asyncio.run(start_ws_server())
