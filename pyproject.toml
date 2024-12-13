@@ -10,14 +10,14 @@ description = "Unofficial API to interface with https://www.nepalstock.com"
 readme = "README.md"
 requires-python = ">=3.10"
 classifiers = [
-        "Intended Audience :: Research",
-        "Operating System :: POSIX :: Linux",
-    ]
+    "Intended Audience :: Research",
+    "Operating System :: POSIX :: Linux",
+]
 dependencies = [
-    "httpx[http2]==0.27.2",
-    "pywasm==1.0.8",
-    "tqdm==4.66.5",
-    "websockets==14.1",
+    "httpx[http2]>=0.27.2",
+    "pywasm>=1.0.8",
+    "tqdm>=4.66.5",
+    "websockets>=14.1",
 ]
 
 [project.urls]
