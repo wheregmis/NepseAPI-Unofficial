@@ -1,15 +1,12 @@
 import asyncio
-import platform
 import websockets
 from nepse import AsyncNepse
-from asyncio import WindowsSelectorEventLoopPolicy
 import signal
 import json
 
 # Initialize Nepse Async
 nepseAsync = AsyncNepse()
 nepseAsync.setTLSVerification(False)
-asyncio.set_event_loop_policy(WindowsSelectorEventLoopPolicy())
 
 async def _get_summary():
     response = {obj["detail"]: obj["value"] for obj in await nepseAsync.getSummary()}
@@ -182,10 +179,10 @@ async def ws_listener(websocket, path=None):
     finally:
         await websocket.close()
 
-# Start WebSocket server on localhost:5555
+# Start WebSocket server on all interfaces
 async def start_ws_server():
-    server = await websockets.serve(ws_listener, "localhost", 5555)
-    print("WebSocket server started on ws://localhost:5555")
+    server = await websockets.serve(ws_listener, "0.0.0.0", 5555)
+    print("WebSocket server started on ws://0.0.0.0:5555")
     await server.wait_closed()
 
 # Running the WebSocket server
