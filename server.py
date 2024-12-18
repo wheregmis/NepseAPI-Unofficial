@@ -57,8 +57,8 @@ routes = {
     "DailyTradingSubindexGraph": "/DailyTradingSubindexGraph",
 }
 
-def restart_app():
-    asyncio.sleep(1)
+async def restart_app():
+    await asyncio.sleep(1)
     os.execv(sys.executable, [sys.executable] + sys.argv)
 
 @app.post("/restart")
