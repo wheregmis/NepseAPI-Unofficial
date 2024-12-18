@@ -1,8 +1,13 @@
-from fastapi import FastAPI, Response
+import asyncio
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Response
 from fastapi.responses import JSONResponse
 from nepse import AsyncNepse
+import os
+import sys
 
 app = FastAPI()
+
+RESTART_SECRET = "459590b22a2e786209ac3c1aea5a1882"
 
 #pip install --upgrade git+https://github.com/basic-bgnr/NepseUnofficialApi.git
 
@@ -51,6 +56,21 @@ routes = {
     "DailyOthersSubindexGraph": "/DailyOthersSubindexGraph",
     "DailyTradingSubindexGraph": "/DailyTradingSubindexGraph",
 }
+
+def restart_app():
+    asyncio.sleep(1)
+    os.execv(sys.executable, [sys.executable] + sys.argv)
+
+@app.post("/restart")
+async def restart_server(secret: str, background_tasks: BackgroundTasks):
+    if secret != RESTART_SECRET:
+        raise HTTPException(status_code=403, detail="Invalid secret key")
+
+    try:
+        background_tasks.add_task(restart_app)
+        return JSONResponse({"message": "Server restarting..."})
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Restart failed: {str(e)}")
 
 @app.get("/")
 async def get_index():

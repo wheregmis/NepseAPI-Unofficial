@@ -1,5 +1,5 @@
-# Use the Python 3.10 slim image as the base
-FROM python:3.10-slim-bullseye
+# Use the Python 3.11 slim image as the base
+FROM python:3.11-slim-bullseye
 
 # Install git and other dependencies
 RUN apt-get update && apt-get install -y git curl
