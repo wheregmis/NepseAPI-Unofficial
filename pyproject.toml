@@ -8,21 +8,31 @@ dynamic = ["version"]
 authors = [ { name="basic-bgnr"} ]
 description = "Unofficial API to interface with https://www.nepalstock.com"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
     "Intended Audience :: Research",
     "Operating System :: POSIX :: Linux",
 ]
 dependencies = [
-    "httpx[http2]>=0.27.2",
     "pywasm>=1.0.8",
+    "httpx[http2]>=0.27.2",
     "tqdm>=4.66.5",
+    "fastapi>=0.115.5",
+    "pyzmq>=26.2.0",
+    "uvicorn>=0.32.1",
     "websockets>=14.1",
+    "uvloop>=0.21.0",
+    "httptools>=0.6.4",
 ]
 
 [project.urls]
 Repository = "https://github.com/basic-bgnr/NepseUnofficialApi.git"
 Issues = "https://github.com/basic-bgnr/NepseUnofficialApi/issues"
+
+[project.optional-dependencies]
+dev = [
+    "nepse @ git+https://github.com/basic-bgnr/NepseUnofficialApi.git"
+]
 
 [tool.setuptools]
 include-package-data = true

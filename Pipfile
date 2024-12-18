@@ -13,6 +13,9 @@ fastapi = ">=0.115.5"
 uvicorn = ">=0.32.1"
 websockets = ">=14.1"
 nepse = {git = "https://github.com/basic-bgnr/NepseUnofficialApi.git", ref = "master"}
+pyzmq = ">=26.2.0"
+uvloop = ">=0.21.0"
+httptools = ">=0.6.4"
 
 [requires]
-python_version = "3.10"  # Adjust this to match your project's Python version
+python_version = "3.11"

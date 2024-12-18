@@ -64,6 +64,18 @@ docker build -t nepseapi .
 docker run -p 8000:8000 -p 5555:5555 nepseapi
 ```
 
+You can directly use the Docker image from Docker Hub:
+
+```sh
+docker run -p 8000:8000 -p 5555:5555 surajrimal/nepseapi:latest
+```
+
+Alternatively, you can use the provided Docker Compose file. Clone the project or copy the `docker-compose.yml` file and run:
+
+```sh
+docker-compose up -d
+```
+
 ## API Endpoints
 
 Base URL: `http://localhost:8000`
