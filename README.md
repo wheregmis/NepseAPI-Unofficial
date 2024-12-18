@@ -1,5 +1,7 @@
 # NEPSE API
 
+![Build and Push Docker Image](https://github.com/surajrimal07/NepseAPI/actions/workflows/docker-build.yml/badge.svg)
+
 An unofficial API service for Nepal Stock Exchange (NEPSE) that provides real-time market data through both REST and WebSocket endpoints.
 
 ## Features
