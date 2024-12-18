@@ -38,3 +38,9 @@ jobs:
             --platform linux/arm64 \
             -t docker.io/surajrimal/nepseapi:latest \
             --push .
+            
+      - name: Upload Docker image to GitHub Packages
+        run: |
+          docker tag docker.io/surajrimal/nepseapi:latest ghcr.io/${{ github.repository }}:latest
+          docker push ghcr.io/${{ github.repository }}:latest
+
