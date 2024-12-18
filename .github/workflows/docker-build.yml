@@ -41,6 +41,6 @@ jobs:
             
       - name: Upload Docker image to GitHub Packages
         run: |
-          docker tag docker.io/surajrimal/nepseapi:latest ghcr.io/${{ github.repository }}:latest
-          docker push ghcr.io/${{ github.repository }}:latest
+          docker tag docker.io/surajrimal/nepseapi:latest ghcr.io/${{ github.repository_owner }}/nepseapi:latest
+          docker push ghcr.io/${{ github.repository_owner }}/nepseapi:latest
 
