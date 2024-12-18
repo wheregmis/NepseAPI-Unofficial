@@ -38,3 +38,4 @@ jobs:
             --platform linux/arm64 \
             -t docker.io/surajrimal/nepseapi:latest \
             --push .
+
