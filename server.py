@@ -403,6 +403,7 @@ async def _getNepseSubIndices():
 if __name__ == "__main__":
     import uvicorn
     import platform
+    import os
 
     base_config = {
         "app": "server:app",
@@ -416,9 +417,8 @@ if __name__ == "__main__":
     if platform.system() == "Windows":
         base_config["reload"] = True
     else:
-        if os.getenv("DISABLE_UVLOOP"):
+        if os.getenv("RENDER"):
             base_config.update({
-                "workers": 2,
                 "http": "httptools"
             })
         else:
