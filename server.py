@@ -6,11 +6,6 @@ import os
 import sys
 import platform
 
-# Add conditional uvloop import
-if platform.system() != "Windows":
-    import uvloop
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-
 app = FastAPI()
 
 RESTART_SECRET = "459590b22a2e786209ac3c1aea5a1882"
@@ -407,6 +402,7 @@ async def _getNepseSubIndices():
 
 if __name__ == "__main__":
     import uvicorn
+    import platform
 
     base_config = {
         "app": "server:app",
@@ -422,8 +418,7 @@ if __name__ == "__main__":
         base_config.update({
             "workers": 2,
             "loop": "uvloop",
-            "http": "httptools",
-            "worker_class": "uvicorn.workers.UvicornWorker"
+            "http": "httptools"
         })
 
     uvicorn.run(**base_config)
