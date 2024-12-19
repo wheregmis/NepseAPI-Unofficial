@@ -4,6 +4,12 @@ from fastapi.responses import JSONResponse
 from nepse import AsyncNepse
 import os
 import sys
+import platform
+
+# Add conditional uvloop import
+if platform.system() != "Windows":
+    import uvloop
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 app = FastAPI()
 
@@ -401,7 +407,6 @@ async def _getNepseSubIndices():
 
 if __name__ == "__main__":
     import uvicorn
-    import platform
 
     base_config = {
         "app": "server:app",
@@ -415,9 +420,10 @@ if __name__ == "__main__":
         base_config["reload"] = True
     else:
         base_config.update({
-            "workers": 4,
+            "workers": 2,
             "loop": "uvloop",
-            "http": "httptools"
+            "http": "httptools",
+            "worker_class": "uvicorn.workers.UvicornWorker"
         })
 
     uvicorn.run(**base_config)
