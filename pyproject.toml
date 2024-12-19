@@ -1,57 +1,14 @@
+[project]
+name = "NepseAPI"
+version = "0.1.0"
+description = "Nepse API Server"
+requires-python = ">=3.11"
+
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
+requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
-[project]
-name = "nepse"
-dynamic = ["version"]
-authors = [ { name="basic-bgnr"} ]
-description = "Unofficial API to interface with https://www.nepalstock.com"
-readme = "README.md"
-requires-python = ">=3.11"
-classifiers = [
-    "Intended Audience :: Research",
-    "Operating System :: POSIX :: Linux",
-]
-dependencies = [
-    "pywasm>=1.0.8",
-    "httpx[http2]>=0.27.2",
-    "tqdm>=4.66.5",
-    "fastapi>=0.115.5",
-    "pyzmq>=26.2.0",
-    "uvicorn>=0.32.1",
-    "websockets>=14.1",
-    "uvloop>=0.21.0",
-    "httptools>=0.6.4",
-]
-
-[project.urls]
-Repository = "https://github.com/basic-bgnr/NepseUnofficialApi.git"
-Issues = "https://github.com/basic-bgnr/NepseUnofficialApi/issues"
-
-[project.optional-dependencies]
-dev = [
-    "nepse @ git+https://github.com/basic-bgnr/NepseUnofficialApi.git"
-]
-
-[tool.setuptools]
-include-package-data = true
-
-[tool.setuptools.packages.find]
-where = ["."]
-exclude = ["example*"]
-
-[tool.setuptools.package-data]
-"*" = ["*.json", "*.wasm"]
-
-[project.scripts]
-nepse-cli = "nepse:main_cli"
-
-[tool.setuptools.dynamic]
-version = {attr = "nepse.__version__"}
-
-[tool.black]
-line-length = 88
-target-version = ['py38']
-color = true
-verbose = true
+[project.dependencies]
+fastapi = "==0.115.6"
+uvicorn = "==0.34.0"
+websockets = "==14.1"

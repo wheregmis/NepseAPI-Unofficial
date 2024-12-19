@@ -1,21 +1,16 @@
 [[source]]
-name = "NepseApi"
-url = ""
+name = "pypi"
+url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
 
 [packages]
-pywasm = ">=1.0.8"
-httpx = {version = ">=0.27.2", extras = ["http2"]}
-tqdm = ">=4.66.5"
-fastapi = ">=0.115.5"
-uvicorn = ">=0.32.1"
-websockets = ">=14.1"
+fastapi = "==0.115.6"
+uvicorn = "==0.34.0"
+websockets = "==14.1"
 nepse = {git = "https://github.com/basic-bgnr/NepseUnofficialApi.git", ref = "master"}
-pyzmq = ">=26.2.0"
-uvloop = ">=0.21.0"
-httptools = ">=0.6.4"
+uvloop = {version = ">=0.21.0", platform_system = "!= 'Windows'"}
 
 [requires]
 python_version = "3.11"

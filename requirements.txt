@@ -1,10 +1,5 @@
-pywasm>=1.0.8
-httpx[http2]>=0.27.2
-tqdm>=4.66.5
-fastapi>=0.115.5
-pyzmq>=26.2.0
-uvicorn>=0.32.1
-websockets>=14.1
-uvloop>=0.21.0
-httptools>=0.6.4
+fastapi==0.115.6
 nepse @ git+https://github.com/basic-bgnr/NepseUnofficialApi.git  #@master
+uvicorn==0.34.0
+websockets==14.1
+uvloop; sys_platform != 'win32'  # Install uvloop only on non-Windows platforms

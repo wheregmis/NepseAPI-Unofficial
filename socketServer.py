@@ -161,10 +161,17 @@ async def ws_listener(websocket, path=None):
                 request = json.loads(message)
                 route = request.get('route')
                 params = request.get('params', {})
+                message_id = request.get('messageId')
                 print(f"Received request: {route} with params: {params}")
 
                 # Handle the route
-                response = await handle_route(route, params)
+                response_data = await handle_route(route, params)
+
+                # Structure response with messageId
+                response = {
+                    "messageId": message_id,
+                    "data": response_data
+                }
 
                 # Send the response back to the client
                 await websocket.send(json.dumps(response))
@@ -172,8 +179,10 @@ async def ws_listener(websocket, path=None):
                 # Handle invalid JSON
                 await websocket.send(json.dumps({"error": "Invalid JSON"}))
             except Exception as route_error:
-                # Handle any errors in route processing
-                await websocket.send(json.dumps({"error": str(route_error)}))
+                await websocket.send(json.dumps({
+                    "messageId": message_id,
+                    "error": str(route_error)
+                }))
     except Exception as e:
         print(f"WebSocket Error: {e}")
     finally:
