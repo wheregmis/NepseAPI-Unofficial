@@ -403,6 +403,7 @@ async def _getNepseSubIndices():
 if __name__ == "__main__":
     import uvicorn
     import platform
+    import os
 
     base_config = {
         "app": "server:app",
@@ -410,15 +411,21 @@ if __name__ == "__main__":
         "port": 8000,
         "timeout_keep_alive": 60,
         "limit_concurrency": 1000,
+        "backlog": 2048,
+        "http": "h11",
     }
-
     if platform.system() == "Windows":
         base_config["reload"] = True
     else:
-        base_config.update({
-            "workers": 2,
-            "loop": "uvloop",
-            "http": "httptools"
-        })
+        if os.getenv("RENDER"):
+            base_config.update({
+                "http": "httptools"
+            })
+        else:
+            base_config.update({
+                "workers": 4,
+                "http": "httptools",
+                "loop": "uvloop"
+            })
 
     uvicorn.run(**base_config)
