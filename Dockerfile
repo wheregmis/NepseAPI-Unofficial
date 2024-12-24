@@ -1,30 +1,27 @@
-# Use the Python 3.11 slim image as the base
-FROM python:3.11-slim-bullseye
+# Builder stage
+FROM python:3.12.8-alpine AS builder
 
-# Install git and other dependencies
-RUN apt-get update && apt-get install -y git curl
+# Install only necessary build dependencies
+RUN apk add --no-cache git gcc musl-dev
 
-# Copy the requirements file
-COPY ./requirements.txt .
+WORKDIR /app
+COPY requirements.txt .
 
-# Install the required Python packages
-RUN pip install -r requirements.txt
+# Install requirements
+RUN pip install --user --no-cache-dir -r requirements.txt
 
-# Install the NepseUnofficialApi directly from GitHub
-#RUN pip install --upgrade git+https://github.com/basic-bgnr/NepseUnofficialApi.git
+# Final stage
+FROM python:3.12.8-alpine
+WORKDIR /app
 
-# Copy the rest of the code
-COPY . .
+# Copy built packages and app code
+COPY --from=builder /root/.local /root/.local
+ENV PATH=/root/.local/bin:$PATH
+COPY server.py ./
 
-# Make sure the script is executable
-RUN chmod +x /health_check.sh
-
-# Add a health check to ensure the application is running
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD /health_check.sh
+    CMD python -c "import http.client; conn = http.client.HTTPConnection('localhost:8000'); conn.request('GET', '/health'); response = conn.getresponse(); exit(0) if response.status == 200 else exit(1)"
 
-# Expose the necessary port (if needed)
-EXPOSE 8000
+EXPOSE 8000 5555
 
-# Run the application
-CMD ["python", "server.py"]
+CMD ["sh", "-c", "python server.py"]
