@@ -4,9 +4,10 @@ uvicorn==0.34.0
 websockets==14.1
 uvloop; sys_platform != 'win32'  # Install uvloop only on non-Windows platforms
 httptools>=0.6.4
-nltk==3.9.1
-newspaper3k==0.2.8
-lxml-html-clean==0.4.1
-indic-nlp-library==0.92
-playwright~=1.49.1
-sumy==0.11.0
+#reverted
+# nltk==3.9.1
+# newspaper3k==0.2.8
+# lxml-html-clean==0.4.1
+# indic-nlp-library==0.92
+# playwright~=1.49.1
+# sumy==0.11.0
