@@ -8,5 +8,5 @@ nltk==3.9.1
 newspaper3k==0.2.8
 lxml-html-clean==0.4.1
 indic-nlp-library==0.92
-playwright==1.49.1
+playwright~=1.49.1
 sumy==0.11.0
