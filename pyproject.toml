@@ -15,7 +15,7 @@ websockets = "==14.1"
 httptools = ">=0.6.4"
 
 [project.urls]
-nepse = "git+https://github.com/surajrimal07/NepseUnofficialApi.git"
+nepse = "git+https://github.com/basic-bgnr/NepseUnofficialApi.git"
 
 [project.optional-dependencies]
 unix = ["uvloop"]
