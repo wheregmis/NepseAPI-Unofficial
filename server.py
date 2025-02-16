@@ -5,6 +5,7 @@ from nepse import AsyncNepse
 import os
 import sys
 import platform
+from browser import scrape_page_content, take_page_screenshot
 
 app = FastAPI()
 

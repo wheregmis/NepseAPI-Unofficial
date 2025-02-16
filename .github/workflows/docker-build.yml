@@ -32,11 +32,9 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push multi-platform Docker image
-
         run: |
           docker buildx build \
-            --platform linux/arm64 \
+            --platform linux/amd64,linux/arm64 \
             -t docker.io/surajrimal/nepseapi:latest \
             --push .
-            
 
