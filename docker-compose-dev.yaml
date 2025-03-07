@@ -1,0 +1,17 @@
+services:
+  nepseapi-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+      - "5555:5555"
+    networks:
+      cloudflare:
+        aliases:
+          - cloudflared
+
+networks:
+  cloudflare:
+    external: true
+    driver: overlay
