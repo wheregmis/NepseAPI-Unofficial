@@ -3,10 +3,49 @@ import websockets
 from nepse import AsyncNepse
 import signal
 import json
+import logging
+import time
+
+# Import validation utilities
+from validator import validate_stock_symbol, validate_index_name
+
+# Import rate limiting
+from rate_limiter import check_websocket_rate_limit, check_rate_limit
+
+logger = logging.getLogger(__name__)
 
 # Initialize Nepse Async
 nepseAsync = AsyncNepse()
 nepseAsync.setTLSVerification(False)
+
+# Common validation functions for WebSocket
+def validate_stock_or_return_error(symbol: str):
+    """Validate stock symbol and return error dict if invalid"""
+    if not symbol:
+        return {"error": "Symbol is required"}
+
+    validation_result = validate_stock_symbol(symbol)
+    if not validation_result["valid"]:
+        error_msg = validation_result["error"]
+        if validation_result.get("suggestions"):
+            error_msg += f" Suggestions: {', '.join(validation_result['suggestions'])}"
+        return {"error": error_msg}
+
+    return {"valid": True, "symbol": validation_result["symbol"]}
+
+def validate_index_or_return_error(index_name: str):
+    """Validate index name and return error dict if invalid"""
+    if not index_name:
+        return {"error": "Index name is required"}
+
+    validation_result = validate_index_name(index_name)
+    if not validation_result["valid"]:
+        error_msg = validation_result["error"]
+        if validation_result.get("available_indices"):
+            error_msg += f" Available indices: {', '.join(validation_result['available_indices'])}"
+        return {"error": error_msg}
+
+    return {"valid": True, "index_name": validation_result["index_name"]}
 
 async def _get_summary():
     response = {obj["detail"]: obj["value"] for obj in await nepseAsync.getSummary()}
@@ -104,6 +143,18 @@ async def _get_trade_turnover_transaction_subindices():
 
 # WebSocket handler
 async def handle_route(route: str, params: dict):
+    # Routes that require symbol validation
+    symbol_routes = ["DailyScripPriceGraph", "CompanyDetails", "PriceVolumeHistory", "FloorsheetOf"]
+
+    # Validate symbol if route requires it
+    if route in symbol_routes:
+        symbol = params.get("symbol")
+        validation_result = validate_stock_or_return_error(symbol)
+        if "error" in validation_result:
+            return validation_result
+        # Update params with validated symbol
+        params = {**params, "symbol": validation_result["symbol"]}
+
     route_handlers = {
         "Summary": lambda: _get_summary(),
         "NepseIndex": lambda: _get_nepse_index(),
@@ -152,17 +203,28 @@ async def handle_route(route: str, params: dict):
 
 # WebSocket listener
 async def ws_listener(websocket, path=None):
-    # Handle the WebSocket connection
-    print(f"New connection from {websocket.remote_address}")
+    # Get client IP for rate limiting
+    client_ip = websocket.remote_address[0] if websocket.remote_address else "unknown"
+
     try:
         async for message in websocket:
             try:
+                # Check message rate limit
+                allowed, info = check_rate_limit(client_ip, "websocket_message")
+                if not allowed:
+                    await websocket.send(json.dumps({
+                        "error": "Rate limit exceeded for messages",
+                        "limit": info["limit"],
+                        "remaining": info["remaining"],
+                        "reset_time": info["reset_time"]
+                    }))
+                    continue
+
                 # Parse the incoming message as JSON
                 request = json.loads(message)
                 route = request.get('route')
                 params = request.get('params', {})
                 message_id = request.get('messageId')
-                print(f"Received request: {route} with params: {params}")
 
                 # Handle the route
                 response_data = await handle_route(route, params)
@@ -170,21 +232,28 @@ async def ws_listener(websocket, path=None):
                 # Structure response with messageId
                 response = {
                     "messageId": message_id,
-                    "data": response_data
+                    "data": response_data,
+                    "rate_limit": {
+                        "remaining": info["remaining"],
+                        "limit": info["limit"],
+                        "reset_time": info["reset_time"]
+                    }
                 }
 
                 # Send the response back to the client
                 await websocket.send(json.dumps(response))
+
             except json.JSONDecodeError:
                 # Handle invalid JSON
                 await websocket.send(json.dumps({"error": "Invalid JSON"}))
             except Exception as route_error:
                 await websocket.send(json.dumps({
-                    "messageId": message_id,
+                    "messageId": message_id if 'message_id' in locals() else None,
                     "error": str(route_error)
                 }))
+
     except Exception as e:
-        print(f"WebSocket Error: {e}")
+        logger.error(f"WebSocket Error: {e}")
     finally:
         await websocket.close()
 

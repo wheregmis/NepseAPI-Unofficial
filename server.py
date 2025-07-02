@@ -1,14 +1,85 @@
 import asyncio
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Response
+from fastapi import BackgroundTasks, FastAPI, HTTPException, Response, Request
 from fastapi.responses import JSONResponse
 from nepse import AsyncNepse
 import os
 import sys
+import logging
 import platform
+import time
+
+# Import validation utilities
+from validator import validate_stock_symbol, validate_index_name, validator
+
+# Import rate limiting
+from rate_limiter import check_rate_limit, get_rate_limit_headers, RateLimitExceeded, rate_limiter
 
 app = FastAPI()
 
-RESTART_SECRET = "459590b22a2e786209ac3c1aea5a1882"
+# Rate limiting middleware
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    # Get client IP
+    client_ip = request.client.host
+    if hasattr(request, 'headers'):
+        # Check for forwarded IP (useful when behind proxy)
+        forwarded_for = request.headers.get('X-Forwarded-For')
+        if forwarded_for:
+            client_ip = forwarded_for.split(',')[0].strip()
+
+    # Check rate limit
+    endpoint = request.url.path
+    allowed, info = check_rate_limit(client_ip, endpoint)
+
+    if not allowed:
+        headers = get_rate_limit_headers(info)
+        retry_after = info["reset_time"] - int(time.time())
+        headers["Retry-After"] = str(retry_after)
+
+        return JSONResponse(
+            status_code=429,
+            content={
+                "error": "Rate limit exceeded",
+                "message": f"Too many requests. Try again in {retry_after} seconds.",
+                "limit": info["limit"],
+                "reset_time": info["reset_time"]
+            },
+            headers=headers
+        )
+
+    # Process request
+    response = await call_next(request)
+
+    # Add rate limit headers to response
+    headers = get_rate_limit_headers(info)
+    for key, value in headers.items():
+        response.headers[key] = value
+
+    return response
+
+# Common validation helper functions
+def validate_stock_or_raise(symbol: str) -> str:
+    """Validate stock symbol and raise HTTPException if invalid"""
+    validation_result = validate_stock_symbol(symbol)
+    if not validation_result["valid"]:
+        error_msg = validation_result["error"]
+        if validation_result.get("suggestions"):
+            error_msg += f" Suggestions: {', '.join(validation_result['suggestions'])}"
+        raise HTTPException(status_code=400, detail=error_msg)
+    return validation_result["symbol"]
+
+def validate_index_or_raise(index_name: str) -> str:
+    """Validate index name and raise HTTPException if invalid"""
+    validation_result = validate_index_name(index_name)
+    if not validation_result["valid"]:
+        error_msg = validation_result["error"]
+        if validation_result.get("available_indices"):
+            error_msg += f" Available indices: {', '.join(validation_result['available_indices'])}"
+        raise HTTPException(status_code=400, detail=error_msg)
+    return validation_result["index_name"]
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 #pip install --upgrade git+https://github.com/basic-bgnr/NepseUnofficialApi.git
 
@@ -17,6 +88,8 @@ nepseAsync = AsyncNepse()
 nepseAsync.setTLSVerification(False)
 
 routes = {
+    "Health": "/health",
+    "Docs": "/docs",
     "PriceVolume": "/PriceVolume",
     "Summary": "/Summary",
     "SupplyDemand": "/SupplyDemand",
@@ -58,24 +131,47 @@ routes = {
     "DailyTradingSubindexGraph": "/DailyTradingSubindexGraph",
 }
 
-async def restart_app():
-    await asyncio.sleep(1)
-    os.execv(sys.executable, [sys.executable] + sys.argv)
-
-@app.post("/restart")
-async def restart_server(secret: str, background_tasks: BackgroundTasks):
-    if secret != RESTART_SECRET:
-        raise HTTPException(status_code=403, detail="Invalid secret key")
-
-    try:
-        background_tasks.add_task(restart_app)
-        return JSONResponse({"message": "Server restarting..."})
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Restart failed: {str(e)}")
-
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+@app.get("/rate-limit/stats")
+async def get_rate_limit_stats():
+    """Get rate limiting statistics"""
+    stats = rate_limiter.get_stats()
+    return JSONResponse(content=stats, headers={"Access-Control-Allow-Origin": "*"})
+
+@app.get("/validate/stock/{symbol}")
+async def validate_stock(symbol: str):
+    """Validate a stock symbol and return validation result"""
+    validation_result = validate_stock_symbol(symbol)
+    if validation_result["valid"]:
+        return JSONResponse(content=validation_result, headers={"Access-Control-Allow-Origin": "*"})
+    else:
+        return JSONResponse(
+            content=validation_result,
+            status_code=404,
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+
+@app.get("/validate/index/{index_name}")
+async def validate_index(index_name: str):
+    """Validate an index name and return validation result"""
+    validation_result = validate_index_name(index_name)
+    if validation_result["valid"]:
+        return JSONResponse(content=validation_result, headers={"Access-Control-Allow-Origin": "*"})
+    else:
+        return JSONResponse(
+            content=validation_result,
+            status_code=404,
+            headers={"Access-Control-Allow-Origin": "*"}
+        )
+
+@app.get("/validation/stats")
+async def get_validation_stats():
+    """Get validation statistics"""
+    stats = validator.get_stats()
+    return JSONResponse(content=stats, headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get("/")
 async def get_index():
@@ -115,7 +211,8 @@ async def get_live_market():
 #Bugged, hoping for fix from the library
 @app.get(routes["MarketDepth"])
 async def get_market_depth(symbol: str):
-    data = await nepseAsync.getSymbolMarketDepth(symbol)
+    validated_symbol = validate_stock_or_raise(symbol)
+    data = await nepseAsync.getSymbolMarketDepth(validated_symbol)
     return JSONResponse(content=data, headers={"Access-Control-Allow-Origin": "*"})
 
 @app.get(routes["NepseSubIndices"])
@@ -168,6 +265,7 @@ async def get_top_losers():
 
 @app.get(routes["IsNepseOpen"])
 async def is_nepse_open():
+    logger.info("IsNepseOpen endpoint called")
     data = await nepseAsync.isNepseOpen()
     return JSONResponse(content=data, headers={"Access-Control-Allow-Origin": "*"})
 
@@ -260,7 +358,8 @@ async def get_daily_trading_subindex_graph():
 
 @app.get(routes["DailyScripPriceGraph"])
 async def get_daily_scrip_price_graph(symbol: str):
-    data = await nepseAsync.getDailyScripPriceGraph(symbol)
+    validated_symbol = validate_stock_or_raise(symbol)
+    data = await nepseAsync.getDailyScripPriceGraph(validated_symbol)
     return JSONResponse(content=data, headers={"Access-Control-Allow-Origin": "*"})
 
 
@@ -278,7 +377,8 @@ async def get_sector_scrips():
 
 @app.get(routes["CompanyDetails"])
 async def get_company_details(symbol: str):
-    data = await nepseAsync.getCompanyDetails(symbol)
+    validated_symbol = validate_stock_or_raise(symbol)
+    data = await nepseAsync.getCompanyDetails(validated_symbol)
     return JSONResponse(content=data, headers={"Access-Control-Allow-Origin": "*"})
 
 
@@ -290,7 +390,8 @@ async def get_price_volume():
 
 @app.get(routes["PriceVolumeHistory"])
 async def get_price_volume_history(symbol: str):
-    data = await nepseAsync.getCompanyPriceVolumeHistory(symbol)
+    validated_symbol = validate_stock_or_raise(symbol)
+    data = await nepseAsync.getCompanyPriceVolumeHistory(validated_symbol)
     return JSONResponse(content=data, headers={"Access-Control-Allow-Origin": "*"})
 
 
@@ -302,7 +403,8 @@ async def get_floorsheet():
 
 @app.get(routes["FloorsheetOf"])
 async def get_floorsheet_of(symbol: str):
-    data = await nepseAsync.getFloorSheetOf(symbol)
+    validated_symbol = validate_stock_or_raise(symbol)
+    data = await nepseAsync.getFloorSheetOf(validated_symbol)
     return JSONResponse(content=data, headers={"Access-Control-Allow-Origin": "*"})
 
 
@@ -406,30 +508,5 @@ async def _getNepseSubIndices():
 
 if __name__ == "__main__":
     import uvicorn
-    import platform
-    import os
 
-    base_config = {
-        "app": "server:app",
-        "host": "0.0.0.0",
-        "port": 8000,
-        "timeout_keep_alive": 60,
-        "limit_concurrency": 1000,
-        "backlog": 2048,
-        "http": "h11",
-    }
-    if platform.system() == "Windows":
-        base_config["reload"] = True
-    else:
-        if os.getenv("RENDER"):
-            base_config.update({
-                "http": "httptools"
-            })
-        else:
-            base_config.update({
-                "workers": 4,
-                "http": "httptools",
-                "loop": "uvloop"
-            })
-
-    uvicorn.run(**base_config)
+    uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=True)

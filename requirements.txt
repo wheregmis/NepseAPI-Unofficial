@@ -4,3 +4,7 @@ uvicorn==0.34.0
 websockets==14.1
 uvloop; sys_platform != 'win32'  # Install uvloop only on non-Windows platforms
 httptools>=0.6.4
+
+# MCP Server dependencies
+mcp>=1.0.0
+httpx>=0.27.0
