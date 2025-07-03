@@ -39,15 +39,16 @@ This is a personal project that earns no money. By choosing to use this software
 - **Stock Symbol & Index Validation**: Comprehensive validation system with intelligent suggestions
 - **Model Context Protocol (MCP)**: AI integration for automated market analysis with over 20 tools.
 - **Endpoint-Level Caching**: In-memory caching (10-minute TTL) for rapid responses to repeated queries.
+- **HTTP Caching**: All REST API responses include a `Cache-Control: public, max-age=30` header to reduce server load and improve client-side performance.
 - Multiple data endpoints including:
   - Price and Volume information
+  - Floorsheet Data
   - Market Summary
   - Live Market Data
   - Top Gainers/Losers
   - Company Details
   - Sector-wise Information
   - Index and Sub-indices
-  - Floorsheet Data
 - **Input Validation**: All endpoints validate stock symbols and index names against actual NEPSE data
 - **Containerized Deployment**: Docker and Docker Compose support for easy deployment
 - **Rate Limiting**: Built-in protection against API abuse with configurable limits
@@ -84,11 +85,12 @@ For any legal concerns, issues, or questions:
 
 A free hosted version is available with rate limiting as a **generous effort** to support researchers and students:
 
-| Service | URL | Rate Limit |
-|---------|-----|------------|
-| **REST API** | `https://nepseapi.surajrimal.dev` | Limited requests/hour |
-| **WebSocket** | `wss://nepseapi.surajrimal.dev/ws` | Limited connections |
-| **MCP Server** | `nepseapimcp.surajrimal.dev` | Limited queries/hour |
+| Service      | URL                                     | Status                                                                                                                                                           |
+|--------------|-----------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **REST API** | `https://nepseapi.surajrimal.dev`         | ![Ping](https://stats.nepsechatbot.com/badge/NepseAPI/dot?animate=ping) ![Uptime](https://stats.nepsechatbot.com/badge/NepseAPI/status)                             |
+| **WebSocket**| `wss://nepseapiws.surajrimal.dev/`        | ![Ping](https://stats.nepsechatbot.com/badge/NepseAPIWS/dot?animate=ping) ![Uptime](https://stats.nepsechatbot.com/badge/NepseAPIWS/status)                         |
+| **MCP Server**| `https://nepseapimcp.surajrimal.dev/mcp/` | ![Ping](https://stats.nepsechatbot.com/badge/NepseAPIMCP/dot?animate=ping) ![Uptime](https://stats.nepsechatbot.com/badge/NepseAPIMCP/status)                       |
+
 
 **⚠️ Critical Service Disclaimers**:
 - **No Reliability Guarantee**: This is provided as a convenience for educational purposes only
@@ -116,7 +118,6 @@ The project consists of three main components:
 
 2. **WebSocket Server** (`socketServer.py`)
    - Provides real-time data streaming
-   - Runs on port 5555
    - Supports bidirectional communication
 
 3. **MCP Server** (`mcp_server.py`) - **NEW**
@@ -176,6 +177,73 @@ python socketServer.py
 # Start MCP server (for AI integration)
 python mcp_server.py
 ```
+
+### WebSocket Server Usage
+
+The WebSocket server provides a persistent, real-time connection for receiving NEPSE data. It's ideal for applications that need live updates without constant polling.
+
+**Connecting to the Server:**
+Connect your WebSocket client to `ws://localhost:5555` (or `wss://nepseapiws.surajrimal.dev/` for the hosted version).
+
+**Communication Protocol:**
+Communication is done via JSON messages.
+
+- **Client Request**: Send a JSON object with a `route` and optional `params`.
+- **Server Response**: The server will respond with the requested data or an error message in JSON format.
+
+**Example 1: Get Market Summary**
+
+1.  **Send this message to the server:**
+    ```json
+    {
+      "route": "Summary",
+      "params": {}
+    }
+    ```
+
+2.  **Receive a response like this:**
+    ```json
+    {
+      "Total Turnover Rs:": 4489236458.2,
+      "Total Traded Shares": 12540423,
+      "Total Transactions": 85879,
+      "Total Scrips Traded": 242
+    }
+    ```
+
+**Example 2: Get Company Details for NABIL Bank**
+
+1.  **Send this message:**
+    ```json
+    {
+      "route": "CompanyDetails",
+      "params": {
+        "symbol": "NABIL"
+      }
+    }
+    ```
+
+2.  **Receive a response with the company's details.**
+
+**Handling Errors:**
+If you send an invalid route or parameters, the server will respond with an error message:
+
+```json
+{
+  "error": "Route not found"
+}
+```
+
+**Available Routes:**
+The WebSocket server supports numerous routes, including:
+- `Summary`
+- `NepseIndex`
+- `LiveMarket`
+- `TopGainers`
+- `TopLosers`
+- `CompanyDetails` (requires `symbol` in params)
+- `FloorsheetOf` (requires `symbol` in params)
+- And many more, mirroring the REST API endpoints.
 
 ### MCP Server Integration
 
@@ -281,7 +349,7 @@ curl "https://nepseapi.surajrimal.dev/validate/stock/NABIL"
 **WebSocket Connection:**
 ```javascript
 // Connect to hosted WebSocket
-const ws = new WebSocket('wss://nepseapi.surajrimal.dev/ws');
+const ws = new WebSocket('wss://nepseapiws.surajrimal.dev/');
 ws.onmessage = (event) => console.log(JSON.parse(event.data));
 ```
 
@@ -289,12 +357,15 @@ ws.onmessage = (event) => console.log(JSON.parse(event.data));
 ```json
 {
   "mcpServers": {
-    "nepse-hosted": {
-      "command": "npx",
-      "args": ["-y", "@modelcontextprotocol/server-fetch"],
-      "env": {
-        "FETCH_BASE_URL": "https://nepseapimcp.surajrimal.dev"
-      }
+    "nepseapi-mcp-server": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--with", "fastmcp",
+        "--with", "requests",
+        "--with", "pydantic",
+        "path\\to\\mcp_server.py"
+      ]
     }
   }
 }
@@ -325,7 +396,7 @@ docker run -p 8000:8000 -p 5555:5555 -p 8080:8080 nepseapi
 
 ```bash
 # Pull and run from Docker Hub
-docker run -p 8000:8000 -p 5555:5555 -p 8080:8080 surajrimal/nepseapi:latest
+docker run -p 8000:8000 -p 5555:5555 -p 8080:8080 -p 9000:9000 surajrimal/nepseapi:latest
 ```
 
 ### Docker Compose (Recommended)

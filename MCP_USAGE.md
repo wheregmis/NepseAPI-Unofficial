@@ -1,219 +1,311 @@
+# NEPSE API MCP Server Usage Guide
 
-# NEPSE MCP Server Usage Examples (FastMCP Version)
+This document provides a detailed guide on how to use the NEPSE API MCP (Model-driven Communication Protocol) Server. The server exposes a set of tools that can be used to access real-time and historical data from the Nepal Stock Exchange (NEPSE).
 
-This document provides examples of how to use the NEPSE MCP server (using FastMCP, not the official MCP Python library) with AI models.
+## Table of Contents
 
-## Setup Instructions
+- [Introduction](#introduction)
+- [Available Tools](#available-tools)
+- [Tool Details](#tool-details)
+  - [General Tools](#general-tools)
+  - [Market Data Tools](#market-data-tools)
+  - [Index and Sub-Index Tools](#index-and-sub-index-tools)
+  - [Graph Data Tools](#graph-data-tools)
+  - [Company and Security Tools](#company-and-security-tools)
+- [Pydantic Models](#pydantic-models)
+- [Available Prompts](#available-prompts)
 
+## Introduction
 
-### 1. Claude Desktop Integration
+The MCP server provides a structured way to interact with the NEPSE API. It uses a tool-based architecture, where each tool corresponds to a specific API endpoint or a set of related endpoints. The server uses Pydantic models to validate data and provide clear, consistent data structures in the output.
 
-Add this configuration to your Claude Desktop settings (use `mcp_server copy.py` for FastMCP):
+## Available Tools
 
-**Location**:
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Linux**: `~/.config/Claude/claude_desktop_config.json`
+Here is a list of all the tools available on the MCP server:
 
-**Configuration**:
-```json
-{
-  "mcpServers": {
-    "nepse-stock-data": {
-      "command": "python",
-      "args": ["mcp_server copy.py"],
-      "cwd": "C:\\Users\\Admin\\Desktop\\Work\\NepseAPI",
-      "env": {
-        "NEPSE_API_BASE_URL": "http://localhost:8000"
-      }
-    }
-  }
-}
-```
+- `ping`
+- `get_market_status`
+- `get_market_summary`
+- `get_nepse_subindex`
+- `get_nepse_index`
+- `get_daily_nepse_index_graph`
+- `get_daily_sensitive_index_graph`
+- `get_daily_float_index_graph`
+- `get_daily_sensitive_float_index_graph`
+- `get_daily_bank_subindex_graph`
+- `get_daily_development_bank_subindex_graph`
+- `get_daily_finance_subindex_graph`
+- `get_daily_hotel_tourism_subindex_graph`
+- `get_daily_hydropower_subindex_graph`
+- `get_daily_investment_subindex_graph`
+- `get_daily_life_insurance_subindex_graph`
+- `get_daily_manufacturing_processing_subindex_graph`
+- `get_daily_microfinance_subindex_graph`
+- `get_daily_mutual_fund_subindex_graph`
+- `get_daily_non_life_insurance_subindex_graph`
+- `get_daily_others_subindex_graph`
+- `get_daily_trading_subindex_graph`
+- `get_live_market`
+- `get_price_volume`
+- `get_top_gainers`
+- `get_top_losers`
+- `get_top_ten_traded_by_shares`
+- `get_top_ten_traded_by_turnover`
+- `get_top_ten_traded_by_transactions`
+- `get_supply_and_demand`
+- `get_company_info`
+- `get_floorsheet`
+- `get_historical_data`
+- `get_market_depth`
+- `get_security_overview`
+- `validate_stock_symbol`
+- `find_symbol_by_company_name`
+- `find_company_name_by_symbol`
 
-### 2. Starting the Services
+## Available Prompts
 
-**Option 1: Use the startup script (Windows)**
-```powershell
-.\start_servers.ps1
-```
+The MCP server also provides a set of pre-defined prompts to facilitate common user queries. These prompts are designed to be used by AI models to generate user-facing responses.
 
-**Option 2: Start manually**
-```bash
-# Terminal 1: Start FastAPI server
-python server.py
+### `stock-quick-lookup`
+- **Description**: Get a quick summary of a stock's current price, volume, and latest trades.
+- **Parameters**:
+    - `symbol` (str): The stock symbol.
 
-# Terminal 2: MCP server will be auto-started by Claude
-# No manual start needed for MCP server
-```
+### `market-sentiment-snapshot`
+- **Description**: Get a snapshot of today's top gainers, losers, and overall market mood.
+- **Parameters**: None
 
+### `sector-performance`
+- **Description**: Analyze the performance of a specific sector today.
+- **Parameters**:
+    - `sector` (str): The name of the sector.
 
-## Available MCP Tools
+### `company-deep-dive`
+- **Description**: Get a detailed report on a company: profile, price history, and recent trades.
+- **Parameters**:
+    - `symbol` (str): The stock symbol.
 
-The MCP server provides 17+ tools for accessing Nepal stock market data. Prompts and tools are defined using FastMCP decorators (`@mcp.prompt`, `@mcp.tool`).
+### `live-market-watchlist`
+- **Description**: Monitor live prices and volumes for a custom list of stocks.
+- **Parameters**:
+    - `symbols` (str): A comma-separated list of stock symbols.
 
-### Market Overview Tools
-- `get_market_summary` - Current market summary with key metrics
-- `get_live_market` - Real-time market data
-- `check_market_status` - Check if NEPSE is open
-- `get_nepse_index` - Main NEPSE index information
-- `get_sector_indices` - Sub-indices for all sectors
+### `market-depth-analyzer`
+- **Description**: Analyze the current bid/ask depth for a stock (only when the market is open).
+- **Parameters**:
+    - `symbol` (str): The stock symbol.
 
-### Company-Specific Tools
-- `get_company_details` - Detailed company information (requires symbol)
-- `get_company_list` - List of all listed companies
-- `get_price_volume` - Price and volume data for all stocks
-- `get_price_history` - Historical data for a company (requires symbol)
+### `post-market-trade-explorer`
+- **Description**: Explore all trades for a stock after the market has closed (floorsheet).
+- **Parameters**:
+    - `symbol` (str): The stock symbol.
 
-### Trading Data Tools
-- `get_top_gainers` - Best performing stocks
-- `get_top_losers` - Worst performing stocks
-- `get_top_turnover` - Highest turnover companies
-- `get_floorsheet` - All today's transactions
-- `get_company_floorsheet` - Company-specific transactions (requires symbol)
+### `validate-stock-symbol`
+- **Description**: Check if a stock symbol is valid and get suggestions if not.
+- **Parameters**:
+    - `symbol` (str): The stock symbol to validate.
 
-### Advanced Tools
-- `get_market_depth` - Bid/ask data for a stock (requires symbol)
-- `get_supply_demand` - Market supply and demand data
-- `get_comprehensive_market_data` - Complete market analysis with sectors
+### `market-open-status`
+- **Description**: Check if the NEPSE market is currently open or closed.
+- **Parameters**: None
 
+### `setup-alert`
+- **Description**: Set up a price or volume alert for a stock.
+- **Parameters**:
+    - `symbol` (str): The stock symbol.
+    - `type` (str): The type of alert (e.g., "price", "volume").
+    - `threshold` (str): The threshold value for the alert.
 
-## Prompt Structure (FastMCP)
+## Tool Details
 
-Prompts are defined using the `@mcp.prompt` decorator. Example:
+### General Tools
 
-```python
-@mcp.prompt(
-    name="stock-quick-lookup",
-    description="Get a quick summary of a stock's current price, volume, and latest trades."
-)
-def stock_quick_lookup(symbol: str) -> PromptMessage:
-    return PromptMessage(role="user", content=TextContent(type="text", text=f"Show me a quick summary for {symbol}."))
-```
+#### `ping`
+- **Description**: A simple tool to check if the server is running.
+- **Parameters**: None
+- **Output**: `{"pong": true}`
 
-See `mcp_server copy.py` for all available prompt definitions.
+#### `get_market_status`
+- **Description**: Get the current status of the NEPSE market.
+- **Parameters**: None
+- **Output**: A `MarketStatus` object.
 
-## Rate Limiting (FastMCP)
+### Market Data Tools
 
-Rate limiting is enforced using FastMCP's built-in middleware. Default: 80 requests/minute (see `mcp_server copy.py`).
-If you exceed the limit, you will receive an error like:
+#### `get_market_summary`
+- **Description**: Get the latest live NEPSE market summary.
+- **Parameters**: None
+- **Output**: A `Summary` object.
 
-```
-Rate limit exceeded for MCP tool 'get_market_summary'.
-Limit: 80 requests per minute. Try again in 25 seconds.
-```
+#### `get_live_market`
+- **Description**: Get real-time live market data for all securities.
+- **Parameters**:
+    - `limit` (optional, int): Number of results per page.
+    - `page` (optional, int): Page number for pagination.
+- **Output**: A paginated list of `LiveMarketItem` objects.
 
-You can adjust the rate limit in the code by changing the `RateLimitingMiddleware` settings.
+#### `get_price_volume`
+- **Description**: Get price and volume data for all stocks, or filter by company.
+- **Parameters**:
+    - `company` (optional, str): Company name or symbol to filter by.
+    - `limit` (optional, int): Number of results per page.
+    - `page` (optional, int): Page number for pagination.
+- **Output**: A paginated list of `PriceVolumeItem` objects.
 
-## Example AI Interactions
+#### `get_top_gainers`
+- **Description**: Get the top 10 gainers of the day.
+- **Parameters**: None
+- **Output**: A list of `TopGainerLoser` objects.
 
-### Market Analysis Query
-**User**: "What's the current state of the Nepal stock market?"
+#### `get_top_losers`
+- **Description**: Get the top 10 losers of the day.
+- **Parameters**: None
+- **Output**: A list of `TopGainerLoser` objects.
 
-**AI Response** (using MCP tools):
-- Calls `get_market_summary` for overview
-- Calls `check_market_status` to see if market is open
-- Calls `get_nepse_index` for index information
-- Provides comprehensive market analysis
+#### `get_top_ten_traded_by_shares`
+- **Description**: Get the top 10 most traded scrips by shares.
+- **Parameters**: None
+- **Output**: A list of `TopTradeScrip` objects.
 
-### Company Research Query
-**User**: "Tell me about NABIL bank's performance"
+#### `get_top_ten_traded_by_turnover`
+- **Description**: Get the top 10 most traded scrips by turnover.
+- **Parameters**: None
+- **Output**: A list of `TopTurnover` objects.
 
-**AI Response** (using MCP tools):
-- Calls `get_company_details` with symbol="NABIL"
-- Calls `get_price_history` for historical data
-- Calls `get_company_floorsheet` for recent transactions
-- Provides detailed company analysis
+#### `get_top_ten_traded_by_transactions`
+- **Description**: Get the top 10 most traded scrips by transactions.
+- **Parameters**: None
+- **Output**: A list of `TopTraders` objects.
 
-### Investment Strategy Query
-**User**: "Which stocks are performing well today?"
+#### `get_supply_and_demand`
+- **Description**: Get supply and demand data.
+- **Parameters**: None
+- **Output**: A `SupplyDemandData` object.
 
-**AI Response** (using MCP tools):
-- Calls `get_top_gainers` for best performers
-- Calls `get_top_turnover` for most active stocks
-- Calls `get_live_market` for current prices
-- Provides investment insights
+#### `get_floorsheet`
+- **Description**: Get the floorsheet (all trades) for a specific stock.
+- **Parameters**:
+    - `symbol` (str): The stock symbol.
+    - `limit` (optional, int): Number of results per page.
+    - `page` (optional, int): Page number for pagination.
+- **Output**: A paginated list of `TradeContract` objects.
 
-## Testing Your Setup
+#### `get_market_depth`
+- **Description**: Get the market depth (buy/sell orders) for a stock.
+- **Parameters**:
+    - `symbol` (str): The stock symbol.
+- **Output**: A `MarketDepthResponse` object.
 
-1. **Test FastAPI server**:
-   ```
-   curl http://localhost:8000/health
-   ```
+### Index and Sub-Index Tools
 
-2. **Test MCP server**:
-   ```
-   python test_mcp.py
-   ```
+#### `get_nepse_index`
+- **Description**: Get the NEPSE index and related indices.
+- **Parameters**: None
+- **Output**: A dictionary of `IndexData` objects, keyed by index name.
 
-3. **Test in Claude Desktop**:
-   - Restart Claude Desktop after adding configuration
-   - Ask: "What tools do you have available?"
-   - You should see the NEPSE tools listed
+#### `get_nepse_subindex`
+- **Description**: Get all NEPSE sub-indices (sector indices).
+- **Parameters**: None
+- **Output**: A dictionary of `SubIndex` objects, keyed by sub-index name.
 
-## Troubleshooting
+### Graph Data Tools
+These tools return time-series data for various indices.
+- **Parameters**:
+    - `limit` (optional, int): Number of results per page.
+    - `page` (optional, int): Page number for pagination.
+- **Output**: A paginated list of `TimeValue` objects.
 
-### Common Issues
+- `get_daily_nepse_index_graph`
+- `get_daily_sensitive_index_graph`
+- `get_daily_float_index_graph`
+- `get_daily_sensitive_float_index_graph`
+- `get_daily_bank_subindex_graph`
+- `get_daily_development_bank_subindex_graph`
+- `get_daily_finance_subindex_graph`
+- `get_daily_hotel_tourism_subindex_graph`
+- `get_daily_hydropower_subindex_graph`
+- `get_daily_investment_subindex_graph`
+- `get_daily_life_insurance_subindex_graph`
+- `get_daily_manufacturing_processing_subindex_graph`
+- `get_daily_microfinance_subindex_graph`
+- `get_daily_mutual_fund_subindex_graph`
+- `get_daily_non_life_insurance_subindex_graph`
+- `get_daily_others_subindex_graph`
+- `get_daily_trading_subindex_graph`
 
-1. **"FastAPI server not running"**
-   - Make sure to start `python server.py` first
-   - Check if port 8000 is available
+### Company and Security Tools
 
-2. **"MCP server not found in Claude"**
-   - Verify the config file path is correct
-   - Restart Claude Desktop completely
-   - Check Python path in the configuration
+#### `get_company_info`
+- **Description**: Get detailed information about a company.
+- **Parameters**:
+    - `symbol` (str): The stock symbol.
+- **Output**: A `CompanyInfo` object.
 
-3. **"Module not found errors"**
-   - Run `pip install -r requirements.txt`
-   - Ensure you're in the correct directory
+#### `get_historical_data`
+- **Description**: Get historical trade data for a stock.
+- **Parameters**:
+    - `symbol` (str): The stock symbol.
+    - `start_date` (str): The start date (YYYY-MM-DD).
+    - `end_date` (str): The end date (YYYY-MM-DD).
+- **Output**: A list of `HistoricalTradeEntry` objects.
 
-### Verification Steps
+#### `get_security_overview`
+- **Description**: Get a comprehensive overview of a security.
+- **Parameters**:
+    - `symbol` (str): The stock symbol.
+- **Output**: A `SecurityOverview` object.
 
-```bash
-# 1. Check Python environment
-python --version
+#### `validate_stock_symbol`
+- **Description**: Validate a stock symbol.
+- **Parameters**:
+    - `symbol` (str): The stock symbol to validate.
+- **Output**: A dictionary with validation results.
 
-# 2. Check dependencies
-python -c "import fastapi, mcp, httpx; print('All dependencies OK')"
+#### `find_symbol_by_company_name`
+- **Description**: Find a stock symbol by company name.
+- **Parameters**:
+    - `company_name` (str): The name of the company.
+- **Output**: A dictionary with the symbol and other info.
 
-# 3. Test FastAPI
-curl http://localhost:8000/docs
+#### `find_company_name_by_symbol`
+- **Description**: Find a company name by stock symbol.
+- **Parameters**:
+    - `symbol` (str): The stock symbol.
+- **Output**: A dictionary with the company name and other info.
 
-# 4. Test MCP functionality
-python test_mcp.py
-```
+## Pydantic Models
 
-## Advanced Usage
+The MCP server uses the following Pydantic models to structure the data returned by the tools.
 
-### Custom MCP Client
-You can also create your own MCP client to interact with the server:
-
-```python
-import asyncio
-from mcp.client.stdio import stdio_client
-
-async def main():
-    async with stdio_client(["python", "mcp_server.py"]) as (read, write):
-        # Your MCP client code here
-        pass
-
-asyncio.run(main())
-```
-
-### Environment Variables
-You can customize the behavior using environment variables:
-
-```bash
-export NEPSE_API_BASE_URL="http://localhost:8000"
-python mcp_server.py
-```
-
-## Support
-
-For issues or questions:
-1. Check the test script output: `python test_mcp.py`
-2. Verify FastAPI server logs
-3. Check Claude Desktop logs (if using Claude)
-
-The MCP server provides a powerful interface for AI models to access real-time Nepal stock market data, enabling sophisticated financial analysis and investment research capabilities.
+- `Summary`
+- `PriceVolumeItem`
+- `SupplyDemand`
+- `SupplyDemandData`
+- `TopGainerLoser`
+- `TopTradeScrip`
+- `TopTurnover`
+- `TopTraders`
+- `MarketStatus`
+- `CompanyInfo`
+- `LiveMarketItem`
+- `MarketIndex`
+- `SubIndex`
+- `TradeContract`
+- `HistoricalTradeEntry`
+- `MarketDepthItem`
+- `MarketDepthData`
+- `MarketDepthResponse`
+- `SecurityDailyTradeDto`
+- `InstrumentType`
+- `ShareGroup`
+- `SectorMaster`
+- `CompanyId`
+- `Security`
+- `SecurityOverview`
+- `TurnoverIndex`
+- `ScripDetail`
+- `SectorDetail`
+- `MarketSummary`
+- `IndexData`
+- `TimeValue`
+- `TimeSeriesData`
