@@ -45,7 +45,7 @@ mcp = FastMCP(
 
 # --- Rate Limiting Middleware ---
 mcp.add_middleware(RateLimitingMiddleware(
-    max_requests_per_second=6/60,  # 6 per minute
+    max_requests_per_second=60/60,  # 60 per minute # change rate limit from here
     burst_capacity=6
 ))
 
@@ -1340,6 +1340,6 @@ async def health_check(request: Request) -> PlainTextResponse:
 # Update the transport to 'stdio' for local testing, 'http' for production / remote
 if __name__ == "__main__":
     # for local testing
-    mcp.run(transport="stdio")
+    # mcp.run(transport="stdio")
     # for production / remote
-    # mcp.run(transport="http", host="0.0.0.0", port=PORT)
+    mcp.run(transport="http", host="0.0.0.0", port=PORT)
