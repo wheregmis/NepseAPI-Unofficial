@@ -7,11 +7,38 @@
 
 An unofficial API service for Nepal Stock Exchange (NEPSE) that provides real-time market data through REST, WebSocket, and Model Context Protocol (MCP) endpoints.
 
+## ⚠️ VERY IMPORTANT: Legal & Liability Disclaimer
+
+**This project is provided "AS IS" without any warranty of any kind, express or implied. By using this software or its hosted services, you are agreeing to accept all risks and responsibilities.**
+
+### 1. Strictly for Educational & Non-Commercial Use
+This project and its associated services are intended **strictly for educational, research, and personal, non-commercial purposes only**.
+- **Commercial use is strictly prohibited.** You may not use this software, its data, or its services to build commercial applications, for financial gain, or in any production trading system.
+- For any commercial use of NEPSE data, you must obtain a license from the Nepal Stock Exchange or an authorized data provider.
+
+### 2. No Guarantee of Accuracy or Reliability
+The data is sourced from unofficial channels. The author **does not guarantee the accuracy, completeness, timeliness, or reliability** of any data provided. Do not use this for making financial decisions. Any financial loss or other damages resulting from the use of this software are solely your responsibility.
+
+### 3. No Liability for Downtime or Bugs
+The author is **not liable for anything**. This includes, but is not limited to:
+- **Bugs or Errors**: The software may contain bugs. There is no obligation to provide patches or fixes.
+- **Server Downtime**: The hosted services may be unavailable at any time without notice.
+- **Data Loss or Damages**: The author is not responsible for any form of loss or damage resulting from the use of this project.
+
+### 4. Hosted Service Is Unreliable and Provided "As-Is"
+A free, hosted version of this API is provided as a convenience for testing and educational use.
+- It runs on a **free-tier Oracle Cloud server in India**, which is known to **terminate instances randomly and without warning**.
+- **There is absolutely NO guarantee of uptime or availability.** Do not rely on it for anything important. The author is not obligated to maintain this service or provide any support for it.
+
+### 5. You Use It at Your Own Risk
+This is a personal project that earns no money. By choosing to use this software, you acknowledge that you understand these risks and agree to hold the author harmless from any and all claims, damages, or losses.
+
 ## Features
 
 - Real-time market data access
 - **Stock Symbol & Index Validation**: Comprehensive validation system with intelligent suggestions
-- **Model Context Protocol (MCP)**: AI integration for automated market analysis
+- **Model Context Protocol (MCP)**: AI integration for automated market analysis with over 20 tools.
+- **Endpoint-Level Caching**: In-memory caching (10-minute TTL) for rapid responses to repeated queries.
 - Multiple data endpoints including:
   - Price and Volume information
   - Market Summary
@@ -152,33 +179,87 @@ python mcp_server.py
 
 ### MCP Server Integration
 
-The MCP server enables AI models (like Claude) to directly access Nepal stock market data.
 
-**Setup with Claude Desktop:**
+The MCP server enables AI models (like Claude) to directly access Nepal stock market data using the Model Context Protocol (MCP) via FastMCP.
 
-1. Add the following to your Claude Desktop configuration:
-```json
-{
-  "mcpServers": {
-    "nepse-stock-data": {
-      "command": "python",
-      "args": ["mcp_server.py"],
-      "cwd": "/path/to/your/NepseAPI",
-      "env": {
-        "NEPSE_API_BASE_URL": "http://localhost:8000"
-      }
-    }
-  }
-}
+Here are some examples of the MCP server in action:
+
+**Stock Analysis**
+![Stock Analysis](public/claude_stock_analysis.png)
+
+**Market Depth**
+![Market Depth](public/claude_market-depth.png)
+
+**NEPSE Index**
+![NEPSE Index](public/clauge_index.png)
+
+**Sub-indices**
+![Sub-indices](public/claude_subindex.png)
+
+
+
+#### How to Run the MCP Server
+
+**Local (for Claude Desktop, stdio):**
+
+In your `mcp_server.py`, ensure you start the server with stdio transport for local integration:
+
+```python
+if __name__ == "__main__":
+    mcp.run(transport="stdio")
 ```
 
-2. Restart Claude Desktop
-3. The AI can now use tools like:
+**Remote (HTTP, for hosted or networked use):**
+
+To run the MCP server as a remote HTTP service (e.g., for network/hosted access):
+
+```python
+if __name__ == "__main__":
+    mcp.run(transport="http", host="0.0.0.0", port=PORT)
+```
+
+#### Claude Desktop Integration
+
+1. **Install `uv` globally** (required for Claude Desktop to find it):
+
+   - **On macOS and Linux:**
+     ```sh
+     curl -LsSf https://astral.sh/uv/install.sh | sh
+     ```
+   - **On Windows:**
+     ```powershell
+     powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+     ```
+
+2. **Configure Claude Desktop**
+
+   Add the following to your `claude_desktop_config.json` (adjust the path to your `mcp_server.py`):
+
+   ```json
+   {
+     "mcpServers": {
+       "nepseapi-mcp-server": {
+         "command": "uv",
+         "args": [
+           "run",
+           "--with", "fastmcp",
+           "--with", "requests",
+           "--with", "pydantic",
+           "python",
+           "C:/Users/Admin/Desktop/Work/NepseAPI/mcp_server.py"
+         ]
+       }
+     }
+   }
+   ```
+
+   - If you are running the MCP server remotely (HTTP), you can point Claude Desktop to the hosted MCP server instead of running it locally.
+
+3. **Restart Claude Desktop**
+
+4. The AI can now use tools like:
    - `get_market_summary` - Get current market overview
-   - `get_company_details` - Get specific company information
-   - `get_top_gainers` - Get best performing stocks
-   - `check_market_status` - Check if market is open
-   - And 15+ more tools for comprehensive market analysis
+   - And 20+ more tools for comprehensive market analysis
 
 **Test MCP Server:**
 ```sh
@@ -455,32 +536,32 @@ For detailed information about the validation system, see [VALIDATION_SUMMARY.md
 
 ## MCP Tools Available
 
-The MCP server provides the following tools for AI integration:
+The MCP server provides the following tools for AI integration, with endpoint-level caching (10-minute TTL) for faster repeat queries:
 
 | Tool Name | Description | Parameters |
 |-----------|-------------|------------|
 | `get_market_summary` | Get current market summary | None |
-| `get_live_market` | Get real-time market data | None |
-| `get_company_details` | Get company information | symbol (required) |
-| `get_price_volume` | Get price/volume for all stocks | None |
+| `get_price_volume` | Get price and volume data | None |
+| `get_live_market_data`| Get live market data | None |
 | `get_top_gainers` | Get top gaining stocks | None |
 | `get_top_losers` | Get top losing stocks | None |
-| `get_nepse_index` | Get NEPSE index information | None |
-| `get_sector_indices` | Get sector sub-indices | None |
-| `check_market_status` | Check if market is open | None |
-| `get_company_list` | Get all listed companies | None |
-| `get_floorsheet` | Get transaction data | None |
-| `get_company_floorsheet` | Get company transactions | symbol (required) |
-| `get_price_history` | Get historical price data | symbol (required) |
-| `get_market_depth` | Get bid/ask data | symbol (required) |
-| `get_supply_demand` | Get supply/demand data | None |
-| `get_top_turnover` | Get top turnover companies | None |
-| `get_comprehensive_market_data` | Get detailed market analysis | None |
-| `validate_stock_symbol` | Validate a stock symbol | symbol (required) |
-| `validate_index_name` | Validate an index name | index_name (required) |
+| `get_company_list` | Get a list of all companies | None |
+| `get_nepse_index` | Get NEPSE index data | None |
+| `get_floorsheet` | Get floorsheet data | `symbol: str` (optional) |
+| `get_supply_demand` | Get market supply/demand data | None |
+| `validate_stock_symbol`| Validate a stock symbol | `symbol: str` |
+| `validate_index_name` | Validate an index name | `index_name: str` |
+| `get_stock_suggestions`| Get suggestions for a stock symbol | `symbol: str` |
+| `get_index_suggestions`| Get suggestions for an index name | `index_name: str` |
 | `get_validation_stats` | Get validation statistics | None |
+| `get_company_details` | Get details for a specific company | `symbol: str` |
+| `get_sector_data` | Get data for a specific sector | `sector: str` |
+| `get_sub_indices` | Get data for all sub-indices | None |
+| `get_top_stocks_by_turnover`| Get top stocks by turnover | None |
+| `get_top_stocks_by_volume`| Get top stocks by volume | None |
+| `get_top_stocks_by_transactions`| Get top stocks by transactions| None |
 
-For detailed MCP setup and usage instructions, see [MCP_USAGE.md](MCP_USAGE.md).
+For more details on how to use these tools, please refer to [MCP_USAGE.md](MCP_USAGE.md).
 
 ## Docker Deployment
 

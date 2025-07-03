@@ -1,11 +1,7 @@
-import asyncio
-from fastapi import BackgroundTasks, FastAPI, HTTPException, Response, Request
+from fastapi import FastAPI, HTTPException, Response, Request
 from fastapi.responses import JSONResponse
 from nepse import AsyncNepse
-import os
-import sys
 import logging
-import platform
 import time
 
 # Import validation utilities

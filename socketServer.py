@@ -1,16 +1,14 @@
 import asyncio
 import websockets
 from nepse import AsyncNepse
-import signal
 import json
 import logging
-import time
 
 # Import validation utilities
 from validator import validate_stock_symbol, validate_index_name
 
 # Import rate limiting
-from rate_limiter import check_websocket_rate_limit, check_rate_limit
+from rate_limiter import check_rate_limit
 
 logger = logging.getLogger(__name__)
 

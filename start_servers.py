@@ -49,12 +49,20 @@ class ServerManager:
         self.processes.append(process)
         return process
 
+    def start_mcp_server(self):
+        """Start the MCP server"""
+        print("Starting MCP server on port 9000...")
+        process = subprocess.Popen([
+            sys.executable, "mcp_server.py"
+        ])
+        self.processes.append(process)
+        return process
+
     def run(self):
-        """Run both servers"""
+        """Run all servers"""
         # Set up signal handlers
         signal.signal(signal.SIGINT, self.signal_handler)
         signal.signal(signal.SIGTERM, self.signal_handler)
-
         try:
             # Start FastAPI server
             fastapi_process = self.start_fastapi_server()
@@ -72,6 +80,9 @@ class ServerManager:
             # Start WebSocket server
             websocket_process = self.start_websocket_server()
 
+            # Start MCP server
+            mcp_process = self.start_mcp_server()
+
             # Wait a moment for WebSocket server to start
             time.sleep(2)
 
@@ -87,7 +98,7 @@ class ServerManager:
             print("  - API docs: http://localhost:8000/docs")
             print("  - Main page: http://localhost:8000/")
             print("  - WebSocket: ws://localhost:5555")
-            print("  - MCP server: http://localhost:9000/mcp")
+            print("  - MCP server: http://0.0.0.0:9000/mcp")
 
             print("\nServers are running. Press Ctrl+C to stop.")
 
@@ -102,6 +113,10 @@ class ServerManager:
 
                 if websocket_process.poll() is not None:
                     print("WebSocket server stopped unexpectedly")
+                    break
+
+                if mcp_process.poll() is not None:
+                    print("MCP server stopped unexpectedly")
                     break
 
         except KeyboardInterrupt:
