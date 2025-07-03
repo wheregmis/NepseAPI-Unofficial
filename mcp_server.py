@@ -4,6 +4,7 @@ import time
 import threading
 from typing import Any, Dict, List, Optional
 from pydantic import BaseModel, Field, ValidationError
+from starlette.middleware.authentication import AuthenticationMiddleware
 
 import httpx
 from dotenv import load_dotenv
@@ -40,7 +41,8 @@ mcp = FastMCP(
     name="nepseapi-mcp-server",
     on_duplicate_tools="error",
     on_duplicate_resources="warn",
-    on_duplicate_prompts="replace"
+    on_duplicate_prompts="replace",
+    stateless_http=True
 )
 
 # --- Rate Limiting Middleware ---
@@ -516,6 +518,9 @@ def validate_and_return(data: Any, model_class: BaseModel, is_list: bool = False
         logger.error(f"Validation error for {model_class.__name__}: {e}")
         return data  # Return raw data if validation fails
 
+@mcp.tool()
+def ping() -> Dict[str, bool]:
+    return {"pong": True}
 
 @mcp.tool()
 def get_market_status() -> Dict[str, Any]:
