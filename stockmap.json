@@ -1339,6 +1339,11 @@
     "sector": "Promoter Share",
     "internalSector": "Promoter Share"
   },
+  "NIFRAGED": {
+    "name": "Nifra Green Energy Debenture 6% - 2088/89",
+    "sector": "Investment",
+    "internalSector": "Investment"
+  },
   "NIFRAUR85/86": {
     "name": "NIFRA Uraj Rinpatra7%-2085/86",
     "sector": "Investment",
