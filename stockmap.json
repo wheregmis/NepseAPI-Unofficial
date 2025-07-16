@@ -2344,6 +2344,11 @@
     "sector": "Hydro Power",
     "internalSector": "HydroPower Index"
   },
+  "TTL": {
+    "name": "Trade Tower Limited",
+    "sector": "Others",
+    "internalSector": "Others Index"
+  },
   "TVCL": {
     "name": "Trishuli Jal Vidhyut Company Limited ",
     "sector": "Hydro Power",
