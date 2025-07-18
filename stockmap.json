@@ -2039,6 +2039,11 @@
     "sector": "Hydro Power",
     "internalSector": "HydroPower Index"
   },
+  "SANVI": {
+    "name": "Sanvi Energy Limited",
+    "sector": "Hydro Power",
+    "internalSector": "HydroPower Index"
+  },
   "SAPDBL": {
     "name": "Saptakoshi Development Bank Ltd",
     "sector": "Development Banks",
