@@ -1804,6 +1804,11 @@
     "sector": "Commercial Banks",
     "internalSector": "Banking SubIndex"
   },
+  "RBBD2088": {
+    "name": "7% RBBL Debenture 2088",
+    "sector": "Commercial Banks",
+    "internalSector": "Banking SubIndex"
+  },
   "RBCL": {
     "name": "Rastriya Beema Company Limited",
     "sector": "Non Life Insurance",
