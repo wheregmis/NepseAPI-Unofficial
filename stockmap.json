@@ -1509,6 +1509,11 @@
     "sector": "Commercial Banks",
     "internalSector": "Banking SubIndex"
   },
+  "NICAD2091": {
+    "name": "7% NIC ASIA Debenture 2091",
+    "sector": "Commercial Banks",
+    "internalSector": "Banking SubIndex"
+  },
   "NICGF2": {
     "name": "NIC ASIA Growth Fund-2",
     "sector": "Commercial Banks",
