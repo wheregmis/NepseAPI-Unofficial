@@ -149,6 +149,11 @@
     "sector": "Hydro Power",
     "internalSector": "HydroPower Index"
   },
+  "BHCL": {
+    "name": "Bikash Hydropower Company Limited",
+    "sector": "Hydro Power",
+    "internalSector": "HydroPower Index"
+  },
   "BHDC": {
     "name": "Bindhyabasini Hydropower Development Company Limited",
     "sector": "Hydro Power",
