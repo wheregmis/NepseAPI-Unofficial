@@ -479,6 +479,11 @@
     "sector": "Promoter Share",
     "internalSector": "Promoter Share"
   },
+  "GBIMESY2": {
+    "name": "Global IME Sammunat Yojana -2",
+    "sector": "Commercial Banks",
+    "internalSector": "Banking SubIndex"
+  },
   "GBILD86/87": {
     "name": "Global IME Bank Limited Debenture 2086/87",
     "sector": "Commercial Banks",
