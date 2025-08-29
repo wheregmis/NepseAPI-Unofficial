@@ -679,6 +679,11 @@
     "sector": "Others",
     "internalSector": "Others Index"
   },
+  "HIMSTAR": {
+    "name": "Him Star Urja Company Limited",
+    "sector": "Hydro Power",
+    "internalSector": "HydroPower Index"
+  },
   "HIDCL": {
     "name": "Hydorelectricity Investment and Development Company Ltd",
     "sector": "Investment",
