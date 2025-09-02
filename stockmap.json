@@ -1,9 +1,4 @@
 {
-  "USHL": {
-    "name": "Upper Syange Hydropower Limited",
-    "sector": "Hydro Power",
-    "internalSector": "HydroPower Index"
-  },
   "ACLBSL": {
     "name": "Aarambha Chautari Laghubitta Bittiya Sanstha Limited",
     "sector": "Microfinance",
@@ -2166,6 +2161,11 @@
   },
   "SIGS3": {
     "name": "Siddhartha Investment Growth Scheme 3",
+    "sector": "Commercial Banks",
+    "internalSector": "Banking SubIndex"
+  },
+  "SBLD2091": {
+    "name": "7.25% SBL Debenture 2091",
     "sector": "Commercial Banks",
     "internalSector": "Banking SubIndex"
   },
