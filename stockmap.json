@@ -1,4 +1,9 @@
 {
+  "USHL": {
+    "name": "Upper Syange Hydropower Limited",
+    "sector": "Hydro Power",
+    "internalSector": "HydroPower Index"
+  },
   "ACLBSL": {
     "name": "Aarambha Chautari Laghubitta Bittiya Sanstha Limited",
     "sector": "Microfinance",
